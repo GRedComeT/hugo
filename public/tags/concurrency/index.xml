@@ -1,12 +1,10 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
   <channel>
-    <title>Dionysun&#39;s Blog</title>
-    <link>http://localhost:1313/</link>
-    <description>我的个人小站</description>
+    <title>Concurrency - Tag - Dionysun&#39;s Blog</title>
+    <link>http://localhost:1313/tags/concurrency/</link>
+    <description>Concurrency - Tag | Dionysun&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator><language>en</language><managingEditor>spguo2000@gmail.com (Dionysun)</managingEditor>
-      <webMaster>spguo2000@gmail.com (Dionysun)</webMaster><lastBuildDate>Mon, 13 May 2024 09:54:40 &#43;0800</lastBuildDate>
-      <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
-    <item>
+      <webMaster>spguo2000@gmail.com (Dionysun)</webMaster><lastBuildDate>Mon, 13 May 2024 09:54:40 &#43;0800</lastBuildDate><atom:link href="http://localhost:1313/tags/concurrency/" rel="self" type="application/rss+xml" /><item>
   <title>多线程基础</title>
   <link>http://localhost:1313/posts/583bc6c/</link>
   <pubDate>Mon, 13 May 2024 09:54:40 &#43;0800</pubDate>
