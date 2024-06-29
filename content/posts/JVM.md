@@ -3,9 +3,9 @@ title: JVM
 subtitle:
 date: 2024-05-14T22:00:05+08:00
 slug: 0840a16
-draft: true
+draft: false
 author:
-  name:
+  name: Shiping Guo
   link:
   email:
   avatar:
@@ -15,9 +15,10 @@ license:
 comment: false
 weight: 0
 tags:
-  - draft
+  - Java
+  - JVM
 categories:
-  - draft
+  - Java
 hiddenFromHomePage: false
 hiddenFromSearch: false
 hiddenFromRss: false
@@ -39,5 +40,225 @@ repost:
 
 # See details front matter: https://fixit.lruihao.cn/documentation/content-management/introduction/#front-matter
 ---
+
+# 走进JVM
+
+## 编译JDK8
+
+### 使用 WSL2 + Docker进行编译测试
+
+- 配置Docker内的ssh，开放端口
+- 更新源时忽略ssl验证\[options\]
+- 修改三个报错信息
+  - 描述符
+  - 时间
+  - 已不支持的头文件
+
+## JVM启动流程
+
+### `JavaMain`
+
+该函数是Main入口点，位于`jdk/src/share/bin/java.c`
+### `JLI_Launch`
+
+`LoadJavaVM()`、`JVMInit()`、`ContinueInNewThread0()`都由不同的系统实现，只定义了头文件(动态加载jvm.so这个共享库，并把jvm.so中的相关函数导出并且初始化)
+
+![JLI_Launch](https://minio.dionysunrsshub.top/myimages/2024-img/JLI_Launch.png)
+## JNI调用本地方法
+
+javac -h out/production/jni_test src/com/test/Main.java
+
+.dylib/.dll 动态链接库
+
+`static{ System.load(.dll) }`
+# JVM内存管理
+
+## 内存区域划分
+
+![MemoryArea](https://minio.dionysunrsshub.top/myimages/2024-img/MemoryArea.png)
+### 程序计数器（线程独立）
+
+与8086CPU中PC寄存器类似，指向当前线程所执行字节码的行号
+### 虚拟机栈（线程独立）
+
+当每个方法被执行的时候，JVM都会同步创建一个栈帧，其中包含当前方法的一些信息，比如局部变量表，操作数栈，动态链接，方法出口等。
+
+#### 局部变量表
+
+方法中的局部变量
+
+#### 操作数栈
+
+执行字节码时使用到的栈结构
+#### 运行时常量池
+
+在当前方法中如果需要调用其他方法的时候，能够从运行时常量池中找到对应的符号引用，然后在==类加载的解析阶段==替换为直接引用，调用对应的方法，即为动态链接。
+
+在JDK8之后，运行时常量池存储于metaSpace中，字符串常量池除外，依旧在Heap中。
+### 本地方法栈
+
+与虚拟机栈类似，但是供JNI使用
+### 堆
+
+是整个Java应用程序共享的区域，此区域的职责就是存放和管理对象和数组，是[垃圾回收机制](#垃圾回收机制 "wikilink")的主要作用区域
+### 方法区 (JDK8 - Metaspace)
+
+该区域也是整个Java应用程序共享的区域，它存储所有的类信息、常量、静态变量、动态编译缓存等数据，大体分为，类信息表与运行时常量池，两个部分。
+
+类信息表中存放的是当前应用程序加载的所有类信息，包括类的版本、字段、方法、接口等信息，同时会将编译时生成的常量池数据全部存放到运行时常量池中。当然，常量也并不是只能从类信息中获取，在程序运行时，也有可能会有新的常量进入到常量池。
+
+- String -\> 常量池
+- .intern() Heap与常量池的关系
+- Integer与int在jvm的存储差异
+  - 前者存储在Heap中，是一个对象，后者直接存储在StackFrame中，是一个实际的数值
+
+### 申请堆外内存
+
+`Unsafe.allocateMemory()`
+## 垃圾回收机制
+
+### 对象存活判定算法
+
+#### 引用计数法
+
+存在互相引用问题
+#### 可达性分析算法
+
+可以被选为GC Roots的条件如下：
++ 在虚拟机栈的栈帧中的局部变量表中的指向GC堆里的对象的引用；当前所有正在被调用的方法的引用类型的参数/局部变量/临时值
++ 虚拟机内部需要用到的对象，例如类加载器的引用，等
++ JNI handles
++ 所有当前被加载的Java类
++ 使用类的静态成员变量对对象的引用
++ 常量池中对对象的引用(`.intern()`)
++ 被添加了锁的对象的引用(`synchronized`)
+
+**是对象的引用作为gc root 而不是被引用的对象**
+
+> \[!NOTE\] Title
+> 在Java虚拟机（JVM）的垃圾回收（GC）过程中，当考虑局部变量表中的元素作为GC Roots时，是对象的引用而非被引用的对象本身，作为GC Roots。这个区分是重要的，因为它影响了垃圾回收器如何确定对象的可达性。
+>
+> 解释
+> 局部变量表中的引用：
+> 在每个活动线程的栈帧中，局部变量表存储着各种类型的数据，包括各种基本数据类型的值和对象引用。
+> 对于对象类型，局部变量表存储的是指向堆中对象的引用（也就是对象的内存地址），而不是对象本身。
+> 这些引用作为起点（GC Roots）被用于在垃圾回收过程中的可达性分析。
+> 为什么是引用而不是对象：
+> GC Roots的概念是用来标识垃圾收集算法的起点。这些起点本身必须是明确的、易于识别的，且在栈上直接可访问的元素。
+> 局部变量表中的引用直接存在于栈帧中，JVM可以快速访问这些引用，并使用它们来查找实际的对象实例。
+> 如果对象实例本身位于堆中，就不能直接作为GC Roots。堆中的对象的存活与否是需要通过引用的可达性来判断的。
+
+#### 最终判定
+
+`Object#finalize()`方法
+![ObjectFinalize](https://minio.dionysunrsshub.top/myimages/2024-img/ObjectFinalize.png)
+### 垃圾回收算法
+
+#### 分代收集机制
+
+JVM将堆内存区域划分为**新生代**，**老年代**，**永久代**（JDK8后由metaSpace代替）
+
+*通过设置JVM不同的垃圾收集器，提供不同的具体实现*
+##### Minor GC
+次要垃圾回收，主要进行新生代区域的垃圾收集。触发条件：新生代的Eden区容量已满时。
+##### Major GC
+主要垃圾回收，主要进行老年代的垃圾收集。
+##### FullGC
+完全垃圾回收，对整个Java堆内存和方法区进行垃圾回收。
+触发条件：
++ 每次晋升到老年代的对象平均大小大于老年代剩余空间
++ Minor GC后存活的对象超过了老年代剩余空间
++ 永久代内存不足（JDK8之前）
++ 手动调用`System.gc()`方法
+
+#### 空间分配担保
+
+若在一次GC后，新生代Eden区存在的大量对象，超出了Survivor区的容量，这时候就需要使用该机制，将Survivor区无法容纳的对象直接送到老年代，而老年代也存在无法容纳的情况，这时候就会调用Full GC进行大规模垃圾回收，尝试腾出空间，否则直接抛出OOM错误。
+![Space](https://minio.dionysunrsshub.top/myimages/2024-img/Space.png)
+
+#### 标记-清除算法
+
+![algo1](https://minio.dionysunrsshub.top/myimages/2024-img/algo1.png)
+#### 标记-复制算法
+![algo2](https://minio.dionysunrsshub.top/myimages/2024-img/algo2.png)
+#### 标记-整理算法
+![algo3](https://minio.dionysunrsshub.top/myimages/2024-img/algo3.png)
+
+### 垃圾收集器实现
+
+#### Serial收集器
+
+新生代收集算法采用标记-复制，老年代采用标记-整理
+![Serial](https://minio.dionysunrsshub.top/myimages/2024-img/Serial.png)
+#### ParNew收集器
+相当于Serial收集器的多线程版本，除了GC线程支持多线程以外没有大区别
+#### Parallel Scavenge/Parallel Old收集器
+新生代收集算法采用标记-复制，老年代采用标记-整理，ParNew收集器不同的是，它会自动衡量一个吞吐量，并根据吞吐量来决定每次垃圾回收的时间，这种自适应机制，能够很好地权衡当前机器的性能，根据性能选择最优方案。
+#### CMS收集器
+该收集器可以并发执行，主要采用标记-清除算法
+![CMS](https://minio.dionysunrsshub.top/myimages/2024-img/CMS.png)
+CMS垃圾回收分为4个阶段：
+- 初始标记（需要暂停用户线程）：这个阶段的主要任务仅仅只是标记出GC Roots能直接关联到的对象，速度比较快，不用担心会停顿太长时间。
+- 并发标记：从GC Roots的直接关联对象开始遍历整个对象图的过程，这个过程耗时较长但是不需要停顿用户线程，可以与垃圾收集线程一起并发运行。
+- 重新标记（需要暂停用户线程）：由于并发标记阶段可能某些用户线程会导致标记产生变得，因此这里需要再次暂停所有线程进行并行标记，这个时间会比初始标记时间长一丢丢。
+- 并发清除：最后就可以直接将所有标记好的无用对象进行删除，因为这些对象程序中也用不到了，所以可以与用户线程并发运行。
+
+虽然它的优点非常之大，但是缺点也是显而易见的，标记清除算法会产生大量的内存碎片，导致可用连续空间逐渐变少，长期这样下来，会有更高的概率触发Full GC，并且在与用户线程并发执行的情况下，也会占用一部分的系统资源，导致用户线程的运行速度一定程度上减慢。
+#### Garbage First（G1）收集器
+G1收集器绕过了Minor GC、Major GC、Full GC，将整个Java堆划分为2048个大小相同的独立`Region`块，每一个`Region`都可以根据需要，自由决定扮演哪个角色（Eden、Survivor和老年代），收集器会根据对应的角色采用不同的回收策略。此外，G1收集器还存在一个Humongous区域，它专门用于存放大对象（一般认为大小超过了Region容量一半的对象为大对象）这样，新生代、老年代在物理上，不再是一个连续的内存区域，而是到处分布的。
+![G1-1](https://minio.dionysunrsshub.top/myimages/2024-img/G1-1.png)
+![G1-2](https://minio.dionysunrsshub.top/myimages/2024-img/G1-2.png)
+G1的回收过程与CMS大体类似：
+- 初始标记（暂停用户线程）：仅仅只是标记一下GC Roots能直接关联到的对象，并且修改TAMS指针的值，让下一阶段用户线程并发运行时，能正确地在可用的Region中分配新对象。这个阶段需要停顿线程，但耗时很短，而且是借用进行Minor GC的时候同步完成的，所以G1收集器在这个阶段实际并没有额外的停顿。
+- 并发标记：从GC Root开始对堆中对象进行可达性分析，递归扫描整个堆里的对象图，找出要回收的对象，这阶段耗时较长，但可与用户程序并发执行。
+- 最终标记（暂停用户线程）：对用户线程做一个短暂的暂停，用于处理并发标记阶段漏标的那部分对象。
+- 筛选回收：负责更新Region的统计数据，对各个Region的回收价值和成本进行排序，根据用户所期望的停顿时间来制定回收计划，可以自由选择任意多个Region构成回收集，然后把决定回收的那一部分Region的存活对象复制到空的Region中，再清理掉整个旧Region的全部空间。这里的操作涉及存活对象的移动，是必须暂停用户线程，由多个收集器线程并行完成的。
+
+### 元空间
+
+### 其他引用类型
+
+# 类与类加载
+
+## 类文件结构
+
+### 类文件信息
+
+- 存储顺序
+  - 魔数
+  - 版本号
+  - 常量池 - 字面量和符号引用
+    具体内容可翻看书籍与笔记，注意主要存储信息都是以字节为单位
+### 字节码指令
+### ASM字节码编程
+## 类加载机制
+### 类加载过程
+    要加载一个类，一定是出于某种目的的，比如我们要运行我们的Java程序，那么就必须要加载主类才能运行主类中的主方法，又或是我们需要加载数据库驱动，那么可以通过反射来将对应的数据库驱动类进行加载。
+
+所以，一般在这些情况下，如果类没有被加载，那么会被自动加载：
+- 使用new关键字创建对象时
+- 使用某个类的静态成员（包括方法和字段）的时候（当然，final类型的静态字段有可能在编译的时候被放到了当前类的常量池中，这种情况下是不会触发自动加载的）
+- 使用反射对类信息进行获取的时候（之前的数据库驱动就是这样的）
+- 加载一个类的子类时
+- 加载接口的实现类，且接口带有`default`的方法默认实现时
+![ClassLoading](https://minio.dionysunrsshub.top/myimages/2024-img/ClassLoading.png)
+加载过程详见itbaima笔记
+
+一些需要注意的点：
++ static final string类型的字符串会被JVM优化到字符串常量池中，不会加载对应的类
++ 数组类型在创建时不会导致类加载，但是数组中的对象创建时，就会导致类加载
++ class文件，metaspace，heap中类对象，gc roots，不同的类加载器
++ 类字面量，`String a`与`String.class`之间的差异
++ 静态方法是在自动生成的`<clinit>`方法中执行
+
+### 类加载器
+
+不同的Class\<?\>对象的GC ROOTs可以为不同的类加载器，于是同一.class文件加载的类也可以不属于同一个metaSpace中的类信息，具体见JavaSE中的反射与双亲委派机制。
+
+- `Object#getClass()`也和`BootstrapClassLoader`一样是JNI方法
+- 区分Object.class和Object().getClass()方法的区别，前者是类字面量，后者是方法，但都是获取Heap中的对应的Class\<?\>对象，其指向metaSpace区的类信息
+
+# JVM - OOM错误
+
 
 <!--more-->

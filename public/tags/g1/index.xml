@@ -144,12 +144,18 @@ src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164003.png"
 alt="image.png" />
 <figcaption aria-hidden="true">image.png</figcaption>
 </figure>
-<p>此方法内存开销较大，进一步缩减，得到细粒度PRT
-### 细粒度 PRT</p>
-<p>通过一个bit位来表示卡表
-<img loading="lazy" src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png" alt="image.png" srcset="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=small, https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=medium 1.5x, https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=large 2x" data-title="image.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>
-### 粗粒度位图</p>
-<p>再度优化细粒度PRT的内存，每个bit位表示一个Region</p>
+<p>此方法内存开销较大，进一步缩减，得到细粒度PRT</p>
+<h3 id="细粒度-prt" class="heading-element"><span>细粒度 PRT</span>
+  <a href="#%e7%bb%86%e7%b2%92%e5%ba%a6-prt" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>通过一个bit位来表示卡表
+<img loading="lazy" src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png" alt="image.png" srcset="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=small, https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=medium 1.5x, https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=large 2x" data-title="image.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<h3 id="粗粒度位图" class="heading-element"><span>粗粒度位图</span>
+  <a href="#%e7%b2%97%e7%b2%92%e5%ba%a6%e4%bd%8d%e5%9b%be" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>再度优化细粒度PRT的内存，每个bit位表示一个Region</p>
 <figure>
 <img
 src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164142.png"
@@ -273,7 +279,6 @@ alt="image.png" />
   </a>
 </h2><p>前面我们说到，Safe Point 其实就是一个代码的特殊位置，在这个位置时线程可以暂停下来。而当我们进行 GC 的时候，所有线程都要进入到 Safe Point 处，才可以进行内存的分析及垃圾回收。根据这个过程，其实我们可以看到：<strong>Safe Point 其实就是栅栏的作用，让所有线程停下来，否则如果所有线程都在运行的话，JVM 无法进行对象引用的分析，那么也无法进行垃圾回收了。</strong></p>
 <p>此外，另一个重要的 Java 线程特性 &mdash;&mdash; interrupted 也是根据 Safe Point 实现的。当我们在代码里写入 <code>Thread.interrupt()</code> 时，只有线程运行到 Safe Point 处时才知道是否发生了 interrupted。<strong>因此，Safe Point 也承担了存储线程通信的功能。</strong></p>
-<p>CITE: <a href="https://www.cnblogs.com/chanshuyi/p/head-first-of-jvm-safe-point.html"target="_blank" rel="external nofollow noopener noreferrer">https://www.cnblogs.com/chanshuyi/p/head-first-of-jvm-safe-point.html</a></p>
 <h1 id="gc-日志打印" class="heading-element"><span>GC 日志打印</span>
   <a href="#gc-%e6%97%a5%e5%bf%97%e6%89%93%e5%8d%b0" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
@@ -320,7 +325,19 @@ alt="image.png" />
 <li><code>-XX:PrintGCDetails -XX:+PrintGCDataStamps -Xloggc:/path/to/gc-%t.log</code></li>
 </ul>
 </li>
-</ul>]]></description>
+</ul>
+<blockquote>
+<ul>
+<li><a href="https://www.cnblogs.com/chanshuyi/p/head-first-of-jvm-safe-point.html"target="_blank" rel="external nofollow noopener noreferrer">https://www.cnblogs.com/chanshuyi/p/head-first-of-jvm-safe-point.html</a></li>
+<li><a href="https://segmentfault.com/a/1190000039411521"target="_blank" rel="external nofollow noopener noreferrer">https://segmentfault.com/a/1190000039411521</a></li>
+<li><a href="https://juejin.cn/post/6949885566536138783?searchId=202406240957236755114659D501068D8D"target="_blank" rel="external nofollow noopener noreferrer">https://juejin.cn/post/6949885566536138783?searchId=202406240957236755114659D501068D8D</a></li>
+<li><a href="https://blog.csdn.net/m0_63437643/article/details/122601042"target="_blank" rel="external nofollow noopener noreferrer">https://blog.csdn.net/m0_63437643/article/details/122601042</a></li>
+<li><a href="https://tech.meituan.com/2016/09/23/g1.html"target="_blank" rel="external nofollow noopener noreferrer">https://tech.meituan.com/2016/09/23/g1.html</a></li>
+<li><a href="https://hllvm-group.iteye.com/group/topic/44381#post-272188"target="_blank" rel="external nofollow noopener noreferrer">https://hllvm-group.iteye.com/group/topic/44381#post-272188</a></li>
+<li><a href="https://www.zhihu.com/question/53613423/answer/135743258"target="_blank" rel="external nofollow noopener noreferrer">https://www.zhihu.com/question/53613423/answer/135743258</a></li>
+<li><a href="https://blog.csdn.net/oJieSi/article/details/134758659"target="_blank" rel="external nofollow noopener noreferrer">https://blog.csdn.net/oJieSi/article/details/134758659</a></li>
+</ul>
+</blockquote>]]></description>
 </item>
 </channel>
 </rss>

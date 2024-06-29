@@ -140,10 +140,16 @@ Sparse PRT 稀疏哈希表
 image.png
 
 此方法内存开销较大，进一步缩减，得到细粒度PRT
-### 细粒度 PRT
+细粒度 PRT
+  
+    
+  
 通过一个bit位来表示卡表
 
-### 粗粒度位图
+粗粒度位图
+  
+    
+  
 再度优化细粒度PRT的内存，每个bit位表示一个Region
 
 
@@ -459,10 +465,16 @@ Sparse PRT 稀疏哈希表
 image.png
 
 此方法内存开销较大，进一步缩减，得到细粒度PRT
-### 细粒度 PRT
+细粒度 PRT
+  
+    
+  
 通过一个bit位来表示卡表
 
-### 粗粒度位图
+粗粒度位图
+  
+    
+  
 再度优化细粒度PRT的内存，每个bit位表示一个Region
 
 
@@ -645,8 +657,8 @@ https://blog.csdn.net/oJieSi/article/details/134758659
 
 ">
   <meta itemprop="datePublished" content="2024-06-29T19:45:45+08:00">
-  <meta itemprop="dateModified" content="2024-06-29T19:46:02+08:00">
-  <meta itemprop="wordCount" content="7269">
+  <meta itemprop="dateModified" content="2024-06-29T20:16:08+08:00">
+  <meta itemprop="wordCount" content="7267">
   <meta itemprop="keywords" content="Java,G1"><meta property="og:url" content="http://localhost:1313/posts/40ccea0/">
   <meta property="og:site_name" content="Dionysun&#39;s Blog">
   <meta property="og:title" content="G1">
@@ -676,9 +688,8 @@ TLAB的再分配通过EMA采样(Exponential Moving Averange, 指数平均数)�
 GC 后，重新计算 TLAB 大小 = Eden区大小 / (线程单个 GC 轮次内最多从 Eden 申请多少次 TLAB * 当前 GC 分配线程个数 EMA)
 RSet - Remember SetG1将堆内存划分为大小相等的region，新创建的对象都是放在新生代的Eden区。为了加速Initial Marking阶段中的GC Roots根扫描阶段，引入了RSet这一概念，具体来说，RSet存储了Region间的引用关系，主要是记录了如下两种：
 Old Region -&gt; Young Region Old Region -&gt; Old Region 内部数据结构Card Table 卡表卡表就是将Region进一步划分为若干个物理连续的512Byte的Card Page，这样每个Region就都有一个Card Table来映射，并且整个堆空间也有一个Global Card Table
-Sparse PRT 稀疏哈希表image.png此方法内存开销较大，进一步缩减，得到细粒度PRT ### 细粒度 PRT
-通过一个bit位来表示卡表 ### 粗粒度位图
-再度优化细粒度PRT的内存，每个bit位表示一个Region
+Sparse PRT 稀疏哈希表image.png此方法内存开销较大，进一步缩减，得到细粒度PRT
+细粒度 PRT通过一个bit位来表示卡表 粗粒度位图再度优化细粒度PRT的内存，每个bit位表示一个Region
 image.pngRefine线程Refine线程的核心功能在于：
 处理新生代分区的抽样 - 更新Young Heap Region的数目 使G1满足GC的预测停顿时间-XX:MaxGCPauseMillis 管理RSet 更新RSet 将G1中更新的引用关系从DCQS - Dirty Card Queue Set 中更新到RSet中 每个线程都有一个私有的DCQ，而DCQS是全局静态变量 并发、异步处理 SATB &amp; SATB MarkQueue &amp; Write barrierSATB，SnapShot-At-The-Beginning，是维护并发GC的正确性的一个手段，G1 GC并发理论基础就是SATB。
 抽象来说，G1 GC认为在一次GC开始的时候是活的对象就被认为是活的（GC Roots搜索），此时的对象图形成一个逻辑快照（SnapShot），然后在GC过程中新分配的对象都当作是活的，其他不可到达的对象就是死的。通过每个Region记录着的Top-At-Mark-Start，TAMS，指针，分别为prevTAMS和nextTAMS，在TAMS以上的对象就是新分配的。但是在并发GC中，Collector和Mutator线程都在进行，如果collector并发mark的过程中mutator覆盖了某些引用字段的值而collector还没mark到那里，那collector就得不到完整的snapshot了，因此，引入了SATB Write Barrier来解决这个问题。
@@ -712,7 +723,7 @@ GC 日志打印打印基本GC信息 -XX:&#43;PrintGCDetails -XX:PrintGCDateStam
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
     <meta property="article:published_time" content="2024-06-29T19:45:45+08:00">
-    <meta property="article:modified_time" content="2024-06-29T19:46:02+08:00">
+    <meta property="article:modified_time" content="2024-06-29T20:16:08+08:00">
     <meta property="article:tag" content="Java">
     <meta property="article:tag" content="G1">
 <meta name="twitter:card" content="summary"><meta name="twitter:title" content="G1">
@@ -849,10 +860,16 @@ Sparse PRT 稀疏哈希表
 image.png
 
 此方法内存开销较大，进一步缩减，得到细粒度PRT
-### 细粒度 PRT
+细粒度 PRT
+  
+    
+  
 通过一个bit位来表示卡表
 
-### 粗粒度位图
+粗粒度位图
+  
+    
+  
 再度优化细粒度PRT的内存，每个bit位表示一个Region
 
 
@@ -1048,8 +1065,8 @@ https://blog.csdn.net/oJieSi/article/details/134758659
     "mainEntityOfPage": {
       "@type": "WebPage",
       "@id": "http:\/\/localhost:1313\/posts\/40ccea0\/"
-    },"genre": "posts","keywords": "Java, G1","wordcount":  7269 ,
-    "url": "http:\/\/localhost:1313\/posts\/40ccea0\/","datePublished": "2024-06-29T19:45:45+08:00","dateModified": "2024-06-29T19:46:02+08:00","publisher": {
+    },"genre": "posts","keywords": "Java, G1","wordcount":  7267 ,
+    "url": "http:\/\/localhost:1313\/posts\/40ccea0\/","datePublished": "2024-06-29T19:45:45+08:00","dateModified": "2024-06-29T20:16:08+08:00","publisher": {
       "@type": "Organization",
       "name": ""},"author": {
         "@type": "Person",
@@ -1127,7 +1144,7 @@ https://blog.csdn.net/oJieSi/article/details/134758659
     <div class="header"><h1 class="single-title animate__animated animate__flipInX"><span title="Repost" class="icon-repost"><i class="fa-solid fa-share fa-fw" aria-hidden="true"></i></span><span>G1</span>
       </h1></div><div class="post-meta">
       <div class="post-meta-line"><span class="post-author"><span class="author"><i class="fa-solid fa-user-circle" aria-hidden="true"></i>
-      Shiping Guo</span></span><span class="post-included-in">&nbsp;included in <a href="/categories/java/" class="post-category" title="Category - Java"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Java</a></span></div><div class="post-meta-line"><span title="published on 2024-06-29 19:45:45"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2024-06-29">2024-06-29</time></span>&nbsp;<span title="Updated on 2024-06-29 19:46:02"><i class="fa-regular fa-calendar-check fa-fw me-1" aria-hidden="true"></i><time datetime="2024-06-29">2024-06-29</time></span>&nbsp;<span title="7269 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 7300 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>15 minutes</span>&nbsp;<span id="busuanzi_container_page_pv" class="busuanzi_visitors comment-visitors" data-flag-title="G1">
+      Shiping Guo</span></span><span class="post-included-in">&nbsp;included in <a href="/categories/java/" class="post-category" title="Category - Java"><i class="fa-regular fa-folder fa-fw" aria-hidden="true"></i> Java</a></span></div><div class="post-meta-line"><span title="published on 2024-06-29 19:45:45"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden="true"></i><time datetime="2024-06-29">2024-06-29</time></span>&nbsp;<span title="Updated on 2024-06-29 20:16:08"><i class="fa-regular fa-calendar-check fa-fw me-1" aria-hidden="true"></i><time datetime="2024-06-29">2024-06-29</time></span>&nbsp;<span title="7267 words"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden="true"></i>About 7300 words</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden="true"></i>15 minutes</span>&nbsp;<span id="busuanzi_container_page_pv" class="busuanzi_visitors comment-visitors" data-flag-title="G1">
             <i class="fa-regular fa-eye fa-fw me-1" aria-hidden="true"></i><span id="busuanzi_value_page_pv">-</span>&nbsp;views
           </span>&nbsp;</div>
     </div><div class="details toc" id="toc-static" data-kept="false">
@@ -1158,6 +1175,8 @@ https://blog.csdn.net/oJieSi/article/details/134758659
       <ul>
         <li><a href="#card-table-卡表">Card Table 卡表</a></li>
         <li><a href="#sparse-prt-稀疏哈希表">Sparse PRT 稀疏哈希表</a></li>
+        <li><a href="#细粒度-prt">细粒度 PRT</a></li>
+        <li><a href="#粗粒度位图">粗粒度位图</a></li>
       </ul>
     </li>
   </ul>
@@ -1310,12 +1329,18 @@ src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164003.png"
 alt="image.png" />
 <figcaption aria-hidden="true">image.png</figcaption>
 </figure>
-<p>此方法内存开销较大，进一步缩减，得到细粒度PRT
-### 细粒度 PRT</p>
-<p>通过一个bit位来表示卡表
-<img loading="lazy" src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png" alt="image.png" srcset="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=small, https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=medium 1.5x, https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=large 2x" data-title="image.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/>
-### 粗粒度位图</p>
-<p>再度优化细粒度PRT的内存，每个bit位表示一个Region</p>
+<p>此方法内存开销较大，进一步缩减，得到细粒度PRT</p>
+<h3 id="细粒度-prt" class="heading-element"><span>细粒度 PRT</span>
+  <a href="#%e7%bb%86%e7%b2%92%e5%ba%a6-prt" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>通过一个bit位来表示卡表
+<img loading="lazy" src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png" alt="image.png" srcset="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=small, https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=medium 1.5x, https://minio.dionysunrsshub.top/myimages/2024-img/20240624164059.png?size=large 2x" data-title="image.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></p>
+<h3 id="粗粒度位图" class="heading-element"><span>粗粒度位图</span>
+  <a href="#%e7%b2%97%e7%b2%92%e5%ba%a6%e4%bd%8d%e5%9b%be" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>再度优化细粒度PRT的内存，每个bit位表示一个Region</p>
 <figure>
 <img
 src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164142.png"
@@ -1501,7 +1526,7 @@ alt="image.png" />
   <div class="post-info">
     <div class="post-info-line">
       <div class="post-info-mod">
-        <span title="Updated on 2024-06-29 19:46:02">Updated on 2024-06-29&nbsp;<a class="git-hash" href="https://github.com/GRedComeT/commit/007a27ce24e67247e64f0756ca84176e6ce2a8f0" rel="external nofollow noopener noreferrer" target="_blank" title="commit by Shiping Guo(a18985113153@gmail.com) 007a27ce24e67247e64f0756ca84176e6ce2a8f0: create G1.md"><i class="fa-solid fa-hashtag fa-fw" aria-hidden="true"></i>007a27c</a></span>
+        <span title="Updated on 2024-06-29 20:16:08">Updated on 2024-06-29&nbsp;<a class="git-hash" href="https://github.com/GRedComeT/commit/c0566b1d5073b5d98a55dbb0029134c2e290851e" rel="external nofollow noopener noreferrer" target="_blank" title="commit by Shiping Guo(a18985113153@gmail.com) c0566b1d5073b5d98a55dbb0029134c2e290851e: upload G1.md"><i class="fa-solid fa-hashtag fa-fw" aria-hidden="true"></i>c0566b1</a></span>
       </div></div><div class="post-info-line">
         <div class="post-info-md"><span><a href="/posts/40ccea0/index.md" title="Read Markdown" class="link-to-markdown">Read Markdown</a></span><span><a href="https://github.com/GRedComeT/blob/main/content/posts%5cG1.md?plain=1" title="View source"target="_blank" rel="external nofollow noopener noreferrer" class="link-to-source">View source</a></span><span><a href="https://github.com/GRedComeT/edit/main/content/posts%5cG1.md" title="Edit this page"target="_blank" rel="external nofollow noopener noreferrer" class="link-to-edit">Edit this page</a></span><span><a href="https://github.com/GRedComeT/issues/new?title=[BUG]%20G1&amp;body=%7cField%7cValue%7c%0A%7c-%7c-%7c%0A%7cTitle%7cG1%7c%0A%7cURL%7chttp://localhost:1313/posts/40ccea0/%7c%0A%7cFilename%7chttps://github.com/GRedComeT/blob/main/content/posts%5cG1.md?plain=1%7c" title="Report issue"target="_blank" rel="external nofollow noopener noreferrer" class="link-to-report">Report issue</a></span></div>
         <div class="post-info-share">
