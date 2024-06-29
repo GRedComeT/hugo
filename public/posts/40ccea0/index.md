@@ -1,75 +1,35 @@
----
-title: G1
-subtitle:
-date: 2024-06-29T19:45:45+08:00
-slug: 40ccea0
-draft: false
-author:
-  name: Shiping Guo
-  link:
-  email:
-  avatar:
-description:
-keywords:
-license:
-comment: false
-weight: 0
-tags:
-  - Java
-  - G1
-categories:
-  - Java
-hiddenFromHomePage: false
-hiddenFromSearch: false
-hiddenFromRss: false
-hiddenFromRelated: false
-summary:
-resources:
-  - name: featured-image
-    src: featured-image.jpg
-  - name: featured-image-preview
-    src: featured-image-preview.jpg
-toc: true
-math: false
-lightgallery: false
-password:
-message:
-repost:
-  enable: true
-  url:
+# G1
 
-# See details front matter: https://fixit.lruihao.cn/documentation/content-management/introduction/#front-matter
----
 
 # G1
 
 G1也是属于并发分代收集器。
 
 堆区域：
-+ 年轻代区域
-+ Eden区域 - 新分配的对象 - TLAB
-+ Survivor区域 - 年轻代GC存活后但不需要晋升的对象 - RSet
-+ 老年代区域
-+ 晋升到老年代的对象
-+ 直接分配到老年代的大对象，占用多个区域的对象，通常是大于Region的一半
+&#43; 年轻代区域
+&#43; Eden区域 - 新分配的对象 - TLAB
+&#43; Survivor区域 - 年轻代GC存活后但不需要晋升的对象 - RSet
+&#43; 老年代区域
+&#43; 晋升到老年代的对象
+&#43; 直接分配到老年代的大对象，占用多个区域的对象，通常是大于Region的一半
 ![image.png](https://minio.dionysunrsshub.top/myimages/2024-img/20240624143329.png)
 
 G1的Collector可以分为两个大部分：
-+ **全局并发标记 (global concurrent marking)**
-+ **拷贝存活对象(evacuation)**
+&#43; **全局并发标记 (global concurrent marking)**
+&#43; **拷贝存活对象(evacuation)**
 
 其分代收集模式又有，区别在于选定的CSet：
-+ **Young GC**
-+ **Mixed GC**
-+ **Full GC**
+&#43; **Young GC**
+&#43; **Mixed GC**
+&#43; **Full GC**
 前两者都是标记-复制作为回收算法
 
 其中的几个关键技术有：
-+ 停顿预测模型
-+ [TLAB](#TLAB "wikilink")
-+ RSet
-+ SATB & SATB MarkQueue & Write barrier
-+ Safe Point
+&#43; 停顿预测模型
+&#43; [TLAB](#TLAB &#34;wikilink&#34;)
+&#43; RSet
+&#43; SATB &amp; SATB MarkQueue &amp; Write barrier
+&#43; Safe Point
 
 ## 全局并发标记
 
@@ -99,9 +59,9 @@ TLAB的核心思想在于优化各个线程从堆内存中新建对象的过程�
 
 ## G1 与 TLAB 的关联
 
-new新对象 -\> TLAB分配 -\> TLAB不可容纳 -\> TLAB外进行分配 -\> 从Eden区获取新的TLAB -\> Eden区不够 -\> 判断回收时间，是触发Young GC还是将空闲分区加入Eden区再次分配
+new新对象 -\&gt; TLAB分配 -\&gt; TLAB不可容纳 -\&gt; TLAB外进行分配 -\&gt; 从Eden区获取新的TLAB -\&gt; Eden区不够 -\&gt; 判断回收时间，是触发Young GC还是将空闲分区加入Eden区再次分配
 
-GC回收 -\> 将Eden Region变为free region -\> 更改相应TLAB参数，重新分配 -\> 循环进行 `new 新对象`
+GC回收 -\&gt; 将Eden Region变为free region -\&gt; 更改相应TLAB参数，重新分配 -\&gt; 循环进行 `new 新对象`
 ![draw.io.drawio.png](https://minio.dionysunrsshub.top/myimages/2024-img/draw.io.drawio.png)
 
 ## TLAB的生命周期
@@ -129,7 +89,7 @@ TLAB 是线程私有的，**线程初始化的时候**，会创建并初始化 T
 
 ## TLAB的再分配
 
-通过EMA采样(Exponential Moving Averange, 指数平均数)，得到新的TLAB大小期望值，该期望值与Eden区的总大小有关，在[\#G1 与 TLAB 的关联](#G1 与 TLAB 的关联 "wikilink")中，概述了这个Eden区的大小的变化过程
+通过EMA采样(Exponential Moving Averange, 指数平均数)，得到新的TLAB大小期望值，该期望值与Eden区的总大小有关，在[\#G1 与 TLAB 的关联](#G1 与 TLAB 的关联 &#34;wikilink&#34;)中，概述了这个Eden区的大小的变化过程
 
 具体来说，EMA算法的核心在于**最小权重**，即**最小权重越大**，变化得越快，受**历史数据影响越小**。
 
@@ -140,8 +100,8 @@ GC 后，重新计算 TLAB 大小 = `Eden区大小` / (`线程单个 GC 轮次�
 # RSet - Remember Set
 
 G1将堆内存划分为大小相等的region，新创建的对象都是放在新生代的Eden区。为了加速Initial Marking阶段中的GC Roots根扫描阶段，引入了RSet这一概念，具体来说，RSet存储了Region间的引用关系，主要是记录了如下两种：
-+ Old Region -\> Young Region
-+ Old Region -\> Old Region
+&#43; Old Region -\&gt; Young Region
+&#43; Old Region -\&gt; Old Region
 
 ## 内部数据结构
 
@@ -151,12 +111,12 @@ G1将堆内存划分为大小相等的region，新创建的对象都是放在新
 
 ### Sparse PRT 稀疏哈希表
 
-<figure>
-<img
-src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164003.png"
-alt="image.png" />
-<figcaption aria-hidden="true">image.png</figcaption>
-</figure>
+&lt;figure&gt;
+&lt;img
+src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/20240624164003.png&#34;
+alt=&#34;image.png&#34; /&gt;
+&lt;figcaption aria-hidden=&#34;true&#34;&gt;image.png&lt;/figcaption&gt;
+&lt;/figure&gt;
 
 此方法内存开销较大，进一步缩减，得到细粒度PRT
 \### 细粒度 PRT
@@ -167,25 +127,25 @@ alt="image.png" />
 
 再度优化细粒度PRT的内存，每个bit位表示一个Region
 
-<figure>
-<img
-src="https://minio.dionysunrsshub.top/myimages/2024-img/20240624164142.png"
-alt="image.png" />
-<figcaption aria-hidden="true">image.png</figcaption>
-</figure>
+&lt;figure&gt;
+&lt;img
+src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/20240624164142.png&#34;
+alt=&#34;image.png&#34; /&gt;
+&lt;figcaption aria-hidden=&#34;true&#34;&gt;image.png&lt;/figcaption&gt;
+&lt;/figure&gt;
 
 # Refine线程
 
 Refine线程的核心功能在于：
-+ 处理新生代分区的抽样 - 更新Young Heap Region的数目
-+ 使G1满足GC的预测停顿时间`-XX:MaxGCPauseMillis`
-+ 管理RSet
-+ 更新RSet
-+ 将G1中更新的引用关系从DCQS - Dirty Card Queue Set 中更新到RSet中
-+ 每个线程都有一个私有的DCQ，而DCQS是全局静态变量
-+ 并发、异步处理
+&#43; 处理新生代分区的抽样 - 更新Young Heap Region的数目
+&#43; 使G1满足GC的预测停顿时间`-XX:MaxGCPauseMillis`
+&#43; 管理RSet
+&#43; 更新RSet
+&#43; 将G1中更新的引用关系从DCQS - Dirty Card Queue Set 中更新到RSet中
+&#43; 每个线程都有一个私有的DCQ，而DCQS是全局静态变量
+&#43; 并发、异步处理
 
-# SATB & SATB MarkQueue & Write barrier
+# SATB &amp; SATB MarkQueue &amp; Write barrier
 
 SATB，SnapShot-At-The-Beginning，是维护并发GC的正确性的一个手段，G1 GC并发理论基础就是SATB。
 
@@ -193,9 +153,9 @@ SATB，SnapShot-At-The-Beginning，是维护并发GC的正确性的一个手段�
 
 ## SATB Write Barrier
 
-Write barrier是对"对引用类型字段赋值"这个动作的环切，也就是说赋值的前后都在barrier覆盖的范畴内。在赋值前的部分的write barrier叫做pre-write barrier，在赋值后的则叫做post-write barrier。
+Write barrier是对&#34;对引用类型字段赋值&#34;这个动作的环切，也就是说赋值的前后都在barrier覆盖的范畴内。在赋值前的部分的write barrier叫做pre-write barrier，在赋值后的则叫做post-write barrier。
 
-前面提到SATB要维持"在GC开始时活的对象"的状态这个逻辑snapshot。除了从root出发把整个对象图mark下来之外，其实只需要用pre-write barrier把每次引用关系变化时旧的引用值记下来就好了。这样，等concurrent marker到达某个对象时，这个对象的所有引用类型字段的变化全都有记录在案，就不会漏掉任何在snapshot里活的对象。当然，很可能有对象在snapshot中是活的，但随着并发GC的进行它可能本来已经死了，但SATB还是会让它活过这次GC。
+前面提到SATB要维持&#34;在GC开始时活的对象&#34;的状态这个逻辑snapshot。除了从root出发把整个对象图mark下来之外，其实只需要用pre-write barrier把每次引用关系变化时旧的引用值记下来就好了。这样，等concurrent marker到达某个对象时，这个对象的所有引用类型字段的变化全都有记录在案，就不会漏掉任何在snapshot里活的对象。当然，很可能有对象在snapshot中是活的，但随着并发GC的进行它可能本来已经死了，但SATB还是会让它活过这次GC。
 
 ## SATB Mark Queue
 
@@ -218,7 +178,7 @@ Write barrier是对"对引用类型字段赋值"这个动作的环切，也就�
 
   - 新的对象创建会放入Eden区
   - Eden区满、G1会根据停顿预测模型-计算当前Eden区GC大概耗时多久
-  - 如果回收时间远 \< -XX:MaxGCPauseMills,则分配空闲分区加入Eden 区存放
+  - 如果回收时间远 \&lt; -XX:MaxGCPauseMills,则分配空闲分区加入Eden 区存放
   - 如果回收时间接近-XX:MaxGCPauseMills，则触发一次Young GC
 
 - 年轻代初始占总堆5%，随着空闲分区加入而增加，最多不超过60%
@@ -251,8 +211,8 @@ Write barrier是对"对引用类型字段赋值"这个动作的环切，也就�
 
 分代式G1的正常工作流程就是在young GC与mixed GC之间视情况切换，背后定期做做全局并发标记。Initial marking默认搭在young GC上执行；当全局并发标记正在工作时，G1不会选择做mixed GC，反之如果有mixed GC正在进行中G1也不会启动initial marking。 在正常工作流程中没有full GC的概念，old gen的收集全靠mixed GC来完成。
 
-如果mixed GC实在无法跟上程序分配内存的速度，导致old gen填满无法继续进行mixed GC，就会切换到G1之外的serial old GC来收集整个GC heap（注意，包括young、old、perm）。这才是真正的full GC。Full GC之所以叫full就是要收集整个堆，只选择old gen的部分region算不上full GC。进入这种状态的G1就跟-XX:+UseSerialGC的full GC一样（背后的核心代码是两者共用的）。  
-顺带一提，G1 GC的System.gc()默认还是full GC，也就是serial old GC。只有加上 -XX:+ExplicitGCInvokesConcurrent 时G1才会用自身的并发GC来执行System.gc()------此时System.gc()的作用是强行启动一次global concurrent marking；一般情况下暂停中只会做initial marking然后就返回了，接下来的concurrent marking还是照常并发执行。
+如果mixed GC实在无法跟上程序分配内存的速度，导致old gen填满无法继续进行mixed GC，就会切换到G1之外的serial old GC来收集整个GC heap（注意，包括young、old、perm）。这才是真正的full GC。Full GC之所以叫full就是要收集整个堆，只选择old gen的部分region算不上full GC。进入这种状态的G1就跟-XX:&#43;UseSerialGC的full GC一样（背后的核心代码是两者共用的）。  
+顺带一提，G1 GC的System.gc()默认还是full GC，也就是serial old GC。只有加上 -XX:&#43;ExplicitGCInvokesConcurrent 时G1才会用自身的并发GC来执行System.gc()------此时System.gc()的作用是强行启动一次global concurrent marking；一般情况下暂停中只会做initial marking然后就返回了，接下来的concurrent marking还是照常并发执行。
 
 # Safe Point
 
@@ -279,30 +239,37 @@ Write barrier是对"对引用类型字段赋值"这个动作的环切，也就�
 # GC 日志打印
 
 - 打印基本GC信息
-  - `-XX:+PrintGCDetails -XX:PrintGCDateStamps`
+  - `-XX:&#43;PrintGCDetails -XX:PrintGCDateStamps`
 - 打印对象分布 - 根据Age
-  - `-XX:+PrintTenuringDistribution`
+  - `-XX:&#43;PrintTenuringDistribution`
 - GC后打印堆数据
-  - `-XX:+PrintHeapAtGC`
+  - `-XX:&#43;PrintHeapAtGC`
 - 打印STW时间
-  - `-XX:+PrintGCApplicationStoppedTime`
+  - `-XX:&#43;PrintGCApplicationStoppedTime`
 - 打印 Safe Point 信息
-  - `-XX:+PringSafepointStatistics -XX:PrintSafepointStatisticsCount=1`
+  - `-XX:&#43;PringSafepointStatistics -XX:PrintSafepointStatisticsCount=1`
 - 打印 Reference 处理信息
-  - `-XX:+PrintReferenceGC`
+  - `-XX:&#43;PrintReferenceGC`
 - 日志分割
   - `-Xloggc:/path/tp/gc.log` - GC日志输出的文件路径
   - `-XX:UseGCLogFileRotation` - 开启日志文件分割
 - 时间戳命名文件
-  - `-XX:PrintGCDetails -XX:+PrintGCDataStamps -Xloggc:/path/to/gc-%t.log`
+  - `-XX:PrintGCDetails -XX:&#43;PrintGCDataStamps -Xloggc:/path/to/gc-%t.log`
 
-> + https://www.cnblogs.com/chanshuyi/p/head-first-of-jvm-safe-point.html
-> + https://segmentfault.com/a/1190000039411521
-> + https://juejin.cn/post/6949885566536138783?searchId=202406240957236755114659D501068D8D
-> + https://blog.csdn.net/m0_63437643/article/details/122601042
-> + https://tech.meituan.com/2016/09/23/g1.html
-> + https://hllvm-group.iteye.com/group/topic/44381#post-272188
-> + https://www.zhihu.com/question/53613423/answer/135743258
-> + https://blog.csdn.net/oJieSi/article/details/134758659
+&gt; &#43; https://www.cnblogs.com/chanshuyi/p/head-first-of-jvm-safe-point.html
+&gt; &#43; https://segmentfault.com/a/1190000039411521
+&gt; &#43; https://juejin.cn/post/6949885566536138783?searchId=202406240957236755114659D501068D8D
+&gt; &#43; https://blog.csdn.net/m0_63437643/article/details/122601042
+&gt; &#43; https://tech.meituan.com/2016/09/23/g1.html
+&gt; &#43; https://hllvm-group.iteye.com/group/topic/44381#post-272188
+&gt; &#43; https://www.zhihu.com/question/53613423/answer/135743258
+&gt; &#43; https://blog.csdn.net/oJieSi/article/details/134758659
 
-<!--more-->
+&lt;!--more--&gt;
+
+
+---
+
+> Author: Shiping Guo  
+> URL: http://localhost:1313/posts/40ccea0/  
+
