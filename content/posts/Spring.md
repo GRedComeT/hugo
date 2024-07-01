@@ -1,5 +1,45 @@
-# Spring 主要源码分析
+---
+title: Spring 主要源码分析 
+subtitle:
+date: 2024-05-13T11:26:20+08:00
+slug: 6e2a775
+draft: false
+author:
+  name: Shiping Guo
+  link:
+  email:
+  avatar:
+description:
+keywords:
+license:
+comment: false
+weight: 0
+tags:
+  - Java
+  - Spring
+categories:
+  - Java
+hiddenFromHomePage: false
+hiddenFromSearch: false
+hiddenFromRss: false
+hiddenFromRelated: false
+summary:
+resources:
+  - name: featured-image
+    src: featured-image.jpg
+  - name: featured-image-preview
+    src: featured-image-preview.jpg
+toc: true
+math: false
+lightgallery: false
+password:
+message:
+repost:
+  enable: true
+  url:
 
+# See details front matter: https://fixit.lruihao.cn/documentation/content-management/introduction/#front-matter
+---
 
 Bean的生命周期为：BeanFactory初始化 - Bean注册 - 实例化 - 属性注入 - 初始化 - 后处理
 
@@ -11,39 +51,39 @@ Bean的生命周期为：BeanFactory初始化 - Bean注册 - 实例化 - 属性�
 
 ## BeanDefinition
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/BeanDefinition.webp&#34;
-alt=&#34;BeanDefinition&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;BeanDefinition&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/BeanDefinition.webp"
+alt="BeanDefinition" />
+<figcaption aria-hidden="true">BeanDefinition</figcaption>
+</figure>
 
 Spring在初始化过程中，先收集所有bean的元数据信息并注册，bean的元数据描述为接口`BeanDefinition`，该接口定义了你能想到的一切有关bean的属性信息
 
 **BeanDefinition**衍生出一系列实现类
-&#43; AbstractBeanDefinition: 如同其他Spring类，大部分**BeanDefinition**接口的逻辑都由该抽象类实现
-&#43; GenericBeanDefinition: 是一站式、用户可见的bean definition；可见的bean definition意味着可以在该bean definition上定义post-processor来对bean进行操作
-&#43; RootBeanDefinition: 当bean definition存在父子关系的时候，**RootBeanDefinition**用来承载父元数据的角色（也可独立存在），同时它也作为一个可合并的bean definition使用，在Spring初始化阶段，所有的bean definition均会被（向父级）合并为**RootBeanDefinition**，子bean definition（**GenericBeanDefinition**/**ChildBeanDefinition**）中的定义会覆盖其父bean definition（由**parentName**指定）的定义
-&#43; AnnotatedBeanDefinition: 用来定义注解Bean Definition
++ AbstractBeanDefinition: 如同其他Spring类，大部分**BeanDefinition**接口的逻辑都由该抽象类实现
++ GenericBeanDefinition: 是一站式、用户可见的bean definition；可见的bean definition意味着可以在该bean definition上定义post-processor来对bean进行操作
++ RootBeanDefinition: 当bean definition存在父子关系的时候，**RootBeanDefinition**用来承载父元数据的角色（也可独立存在），同时它也作为一个可合并的bean definition使用，在Spring初始化阶段，所有的bean definition均会被（向父级）合并为**RootBeanDefinition**，子bean definition（**GenericBeanDefinition**/**ChildBeanDefinition**）中的定义会覆盖其父bean definition（由**parentName**指定）的定义
++ AnnotatedBeanDefinition: 用来定义注解Bean Definition
 
 **BeanDefinitionHolder**只是简单捆绑了BeanDefinition、bean-name、bean-alias，用于注册BeanDefinition及别名alias \^BeanDefinitionHolder
 
 ## BeanRegistry
 
 Bean的注册逻辑分为两步，一为**BeanDefinition**的注册，二为别名的注册
-&#43; **BeanDefinition**注册的定义在***BeanDefinitionRegistry#registerBeanDefinition***，其实现使用一个***Map\&lt;String, BeanDefinition\&gt;*** 来保存bean-name和BeanDefinition的关系
-- 别名的注册定义在***AliasRegistry#registerAlias***，其实现同样使用一个***Map\&lt;String, String\&gt;*** 来保存别名alias-name和bean-name（或另一个别名alias-name）的关系
++ **BeanDefinition**注册的定义在***BeanDefinitionRegistry#registerBeanDefinition***，其实现使用一个***Map\<String, BeanDefinition\>*** 来保存bean-name和BeanDefinition的关系
+- 别名的注册定义在***AliasRegistry#registerAlias***，其实现同样使用一个***Map\<String, String\>*** 来保存别名alias-name和bean-name（或另一个别名alias-name）的关系
 
 注意Bean的注册时机，通常应该在应用上下文的刷新过程之前进行(`onRefresh()`)。一旦上下文被刷新，对Bean定义的任何修改可能不会被识别，或者可能会导致不一致的状态
 
 # Bean的实例化
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/BigMap.webp&#34;
-alt=&#34;BigMap&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;BigMap&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/BigMap.webp"
+alt="BigMap" />
+<figcaption aria-hidden="true">BigMap</figcaption>
+</figure>
 
 ## BeanFactory
 
@@ -68,7 +108,7 @@ bean的实例化过程发生在**getBean**调用阶段（对于singleton则发�
 
 ``` java
 // org.springframework.beans.factory.support.AbstractBeanFactory
-protected &lt;T&gt; T doGetBean(final String name, @Nullable final Class&lt;T&gt; requiredType,
+protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
         @Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
 
     // 1. 获取真正的beanName
@@ -79,31 +119,31 @@ protected &lt;T&gt; T doGetBean(final String name, @Nullable final Class&lt;T&gt
     Object sharedInstance = getSingleton(beanName);
     
     // 3. 如果存在
-    if (sharedInstance != null &amp;&amp; args == null) { ... }
+    if (sharedInstance != null && args == null) { ... }
     
     // 4. 如果不存在
     else { ... }
     
     // 5. 尝试类型转换
-    if (requiredType != null &amp;&amp; !requiredType.isInstance(bean)) { ... }
+    if (requiredType != null && !requiredType.isInstance(bean)) { ... }
     
     return (T) bean;
 }
 ```
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/doGetBean.webp&#34;
-alt=&#34;doGetBean&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;doGetBean&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/doGetBean.webp"
+alt="doGetBean" />
+<figcaption aria-hidden="true">doGetBean</figcaption>
+</figure>
 
 ##### Bean Name的转换
 
-在使用bean-name获取bean的时候，除了可以使用原始bean-name之外，还可以使用alias别名等，bean-name的转换则是将传入的&#39;bean-name&#39;一层层转为最原始的bean-name
+在使用bean-name获取bean的时候，除了可以使用原始bean-name之外，还可以使用alias别名等，bean-name的转换则是将传入的'bean-name'一层层转为最原始的bean-name
 
 - 函数**canonicalName**的作用则是利用别名注册***aliasMap***，将别名alias转为原始bean-name
-- 函数**transformedBeanName**比较特殊，其是将**FactoryBean**的bean-name前缀 &#39;&amp;&#39; 去除
+- 函数**transformedBeanName**比较特殊，其是将**FactoryBean**的bean-name前缀 '&' 去除
   ![bean-name-transform](https://minio.dionysunrsshub.top/myimages/2024-img/bean-name-transform.webp)
   
 ##### 尝试获取单例
@@ -111,14 +151,14 @@ alt=&#34;doGetBean&#34; /&gt;
 拿到原始的bean-name之后，便可以实例化bean或者直接获取已经实例化的singleton-bean
 
 在获取singleton-bean的时候一般存在三种情况：1. 还未实例化(或者不是单例)；2. 已经实例化；3. 正在实例化；
-- 对于 &#34;1. 还未实例化&#34; ，返回null即可，后续进行实例化动作
-- 对于 &#34;2. 已经实例化&#34;，直接返回实例化的singleton-bean
-- 对于 &#34;3. 正在实例化&#34;，会存在循环依赖问题
+- 对于 "1. 还未实例化" ，返回null即可，后续进行实例化动作
+- 对于 "2. 已经实例化"，直接返回实例化的singleton-bean
+- 对于 "3. 正在实例化"，会存在循环依赖问题
 
 Spring中对于singleton-bean，有一个***sharedInstance***的概念，在调用`getSingleton`函数时，返回的不一定是完全实例化的singleton-bean，有可能是一个中间状态（创建完成，但未进行属性依赖注入及其他后处理逻辑），这种中间状态会通过**getSingleton**函数提前曝光出来，目的是为了解决循环依赖
 
 因此，Spring通过提供三层缓存来解决循环依赖问题，并且可以通过这种机制实现诸多的**PostProcessor**增强Bean，例如AOP
-&#43; **singletonObjects**
++ **singletonObjects**
 缓存已经实例化完成的singleton-bean
 
 - **earlySingletonObjects**
@@ -127,11 +167,11 @@ Spring中对于singleton-bean，有一个***sharedInstance***的概念，在调�
 - **singletonFactories**
   缓存用于生成earlySingletonObject的 ObjectFactory
 
-&gt; **ObjectFactory**，定义了一个用于创建、生成对象实例的工厂方法
+> **ObjectFactory**，定义了一个用于创建、生成对象实例的工厂方法
 
 ``` java
 @FunctionalInterface
-public interface ObjectFactory&lt;T&gt; {
+public interface ObjectFactory<T> {
     T getObject() throws BeansException;
 }
 ```
@@ -139,20 +179,20 @@ public interface ObjectFactory&lt;T&gt; {
 因此getSingleton的逻辑如下：
 ![getSingleton](https://minio.dionysunrsshub.top/myimages/2024-img/getSingleton.webp)
 
-**NOTE**: 在[提前暴露实体](#提前暴露实体 &#34;wikilink&#34;)中，将相应的**ObjectFactory**放入了**singletonFactories**
+**NOTE**: 在[提前暴露实体](#提前暴露实体 "wikilink")中，将相应的**ObjectFactory**放入了**singletonFactories**
 
 ##### FactoryBean的处理(sharedInstance存在的逻辑)
 
 ==**sharedInstance**不一定是我们所需要的bean实例==
 
-例如，我们在定义Bean的时候可以通过实现**FactoryBean**接口来定制bean实例化的逻辑([实现FactoryBean](JavaSSM#^249d21 &#34;wikilink&#34;))，通过注册FactoryBean类型的Bean，实例化后的原始实例类型同样为FactoryBean，但我们需要的是通过FactoryBean#getObject方法得到的实例，这需要针对FactoryBean做一些处理，即**AbstractBeanFactory#getObjectForBeanInstance**
+例如，我们在定义Bean的时候可以通过实现**FactoryBean**接口来定制bean实例化的逻辑([实现FactoryBean](JavaSSM#^249d21 "wikilink"))，通过注册FactoryBean类型的Bean，实例化后的原始实例类型同样为FactoryBean，但我们需要的是通过FactoryBean#getObject方法得到的实例，这需要针对FactoryBean做一些处理，即**AbstractBeanFactory#getObjectForBeanInstance**
 
-&gt; Get the object for the given bean instance, either the bean instance itself or its created object in case of a FactoryBean.
-&gt; Now we have the bean instance, which may be a normal bean or a FactoryBean. If it&#39;s a FactoryBean, we use it to create a bean instance.
+> Get the object for the given bean instance, either the bean instance itself or its created object in case of a FactoryBean.
+> Now we have the bean instance, which may be a normal bean or a FactoryBean. If it's a FactoryBean, we use it to create a bean instance.
 
 该函数要实现的逻辑比较简单，如果sharedInstance是 FactoryBean，则使用getObject方法创建真正的实例
 
-&gt; getObjectForBeanInstance是一个通用函数，并不只针对通过getSingleton得到的sharedInstance，任何通过缓存或者创建得到的 rawInstance，都需要经过getObjectForBeanInstance处理，拿到真正需要的 beanInstance
+> getObjectForBeanInstance是一个通用函数，并不只针对通过getSingleton得到的sharedInstance，任何通过缓存或者创建得到的 rawInstance，都需要经过getObjectForBeanInstance处理，拿到真正需要的 beanInstance
 
 ``` java
 /**
@@ -167,22 +207,22 @@ protected Object getObjectForBeanInstance(
 
 ###### getObjectBeanInstance
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/getObjectForBeanInstance.webp&#34;
-alt=&#34;getObjectForBeanInstance&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;getObjectForBeanInstance&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/getObjectForBeanInstance.webp"
+alt="getObjectForBeanInstance" />
+<figcaption aria-hidden="true">getObjectForBeanInstance</figcaption>
+</figure>
 
-在这个判断逻辑中，如果入参**name**以&#39;&amp;&#39;开头则直接返回，这里兼容了一种情况，如果需要获取/注入FactoryBean而不是getObject生成的实例，[则需要在bean-name/alias-name前加入\&#39;&amp;\&#39;](JavaSSM#^5d8395 &#34;wikilink&#34;)
+在这个判断逻辑中，如果入参**name**以'&'开头则直接返回，这里兼容了一种情况，如果需要获取/注入FactoryBean而不是getObject生成的实例，[则需要在bean-name/alias-name前加入\'&\'](JavaSSM#^5d8395 "wikilink")
 
 对于singleton，FactoryBean#getObject的结果会被缓存到factoryBeanObjectCache，对于缓存中不存在或者不是singleton的情况，会通过FactoryBean#getObject生成 \^factorybeangetobject
 
 ###### `FactoryBeanRegistrySupport#getObjectFromFactoryBean`
 
 ``` java
-protected Object getObjectFromFactoryBean(FactoryBean&lt;?&gt; factory, String beanName, boolean shouldPostProcess) {  
-    if (factory.isSingleton() &amp;&amp; this.containsSingleton(beanName)) {  
+protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {  
+    if (factory.isSingleton() && this.containsSingleton(beanName)) {  
         synchronized(this.getSingletonMutex()) {  
             Object object = this.factoryBeanObjectCache.get(beanName);  
             if (object == null) {  
@@ -201,7 +241,7 @@ protected Object getObjectFromFactoryBean(FactoryBean&lt;?&gt; factory, String b
                         try {  
                             object = this.postProcessObjectFromFactoryBean(object, beanName);  
                         } catch (Throwable var14) {  
-                            throw new BeanCreationException(beanName, &#34;Post-processing of FactoryBean&#39;s singleton object failed&#34;, var14);  
+                            throw new BeanCreationException(beanName, "Post-processing of FactoryBean's singleton object failed", var14);  
                         } finally {  
                             this.afterSingletonCreation(beanName);  
                         }  
@@ -221,7 +261,7 @@ protected Object getObjectFromFactoryBean(FactoryBean&lt;?&gt; factory, String b
             try {  
                 object = this.postProcessObjectFromFactoryBean(object, beanName);  
             } catch (Throwable var17) {  
-                throw new BeanCreationException(beanName, &#34;Post-processing of FactoryBean&#39;s object failed&#34;, var17);  
+                throw new BeanCreationException(beanName, "Post-processing of FactoryBean's object failed", var17);  
             }  
         }  
   
@@ -231,19 +271,19 @@ protected Object getObjectFromFactoryBean(FactoryBean&lt;?&gt; factory, String b
 ```
 
 对于Singleton:
-&#43; 首先从缓存中尝试获取，如获取失败，调用[doGetObjectFromFactoryBean](#`FactoryBeanRegistrySupport doGetObjectFromFactoryBean` &#34;wikilink&#34;)，其中内核是调用[FactoryBean#getObject()](#^factorybeangetobject &#34;wikilink&#34;)方法
-&#43; 对于需要后处理的Bean，首先判断是否处于正在创建状态(`isSingletonCurrentlyInCreation`)，并且通过`this.beforeSingletonCreate()` `this.afterSingletonCreation()`将实际的`BeanPostProcessor`过程保护
-&#43; 对于`BeanPostProcessor`，调用`this.postProcessObjectFromFactoryBean`，其具体实现在[AbstractAutowireCapableBeanFactory#applyBeanPostProcessorAfterInitialization](#`AbstractAutowireCapableBeanFactory applyBeanPostProcessorAfterInitialization` &#34;wikilink&#34;)
++ 首先从缓存中尝试获取，如获取失败，调用[doGetObjectFromFactoryBean](#`FactoryBeanRegistrySupport doGetObjectFromFactoryBean` "wikilink")，其中内核是调用[FactoryBean#getObject()](#^factorybeangetobject "wikilink")方法
++ 对于需要后处理的Bean，首先判断是否处于正在创建状态(`isSingletonCurrentlyInCreation`)，并且通过`this.beforeSingletonCreate()` `this.afterSingletonCreation()`将实际的`BeanPostProcessor`过程保护
++ 对于`BeanPostProcessor`，调用`this.postProcessObjectFromFactoryBean`，其具体实现在[AbstractAutowireCapableBeanFactory#applyBeanPostProcessorAfterInitialization](#`AbstractAutowireCapableBeanFactory applyBeanPostProcessorAfterInitialization` "wikilink")
 
 ###### `FactoryBeanRegistrySupport#doGetObjectFromFactoryBean`
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/FactoryBeanRegistrySupport_doGetObjectFromFactoryBean.webp&#34;
-alt=&#34;FactoryBeanRegistrySupport_doGetObjectFromFactoryBean&#34; /&gt;
-&lt;figcaption
-aria-hidden=&#34;true&#34;&gt;FactoryBeanRegistrySupport_doGetObjectFromFactoryBean&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/FactoryBeanRegistrySupport_doGetObjectFromFactoryBean.webp"
+alt="FactoryBeanRegistrySupport_doGetObjectFromFactoryBean" />
+<figcaption
+aria-hidden="true">FactoryBeanRegistrySupport_doGetObjectFromFactoryBean</figcaption>
+</figure>
 
 ###### `AbstractAutowireCapableBeanFactory#applyBeanPostProcessorAfterInitialization`
 
@@ -251,12 +291,12 @@ postProcessAfterInitialization函数可以对现有bean instance做进一步的�
 
 ##### 加载Bean实例 (sharedInstance不存在的逻辑)
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/createBeanInstance.webp&#34;
-alt=&#34;createBeanInstance&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;createBeanInstance&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/createBeanInstance.webp"
+alt="createBeanInstance" />
+<figcaption aria-hidden="true">createBeanInstance</figcaption>
+</figure>
 
 Bean的加载/创建分为三大部分
 1. 将BeanDefinition合并为RootBeanDefinition，类似类继承，子BeanDefinition属性会覆盖父BeanDefinition
@@ -286,19 +326,19 @@ if (dependsOn != null) {
 ```
 
 该过程中涉及两个中间态
-&#43; dependentBeanMap
++ dependentBeanMap
 存储哪些bean依赖了我（哪些bean里注入了我）
-如果 beanB -\&gt; beanA, beanC -\&gt; beanA，key为beanA，value为\[beanB, beanC\]
+如果 beanB -\> beanA, beanC -\> beanA，key为beanA，value为\[beanB, beanC\]
 
 - dependenciesForBeanMap
   存储我依赖了哪些bean（我注入了哪些bean）
-  如果 beanA -\&gt; beanB, beanA -\&gt; beanC，key为beanA，value为\[beanB, beanC\]
+  如果 beanA -\> beanB, beanA -\> beanC，key为beanA，value为\[beanB, beanC\]
 
 ###### 加载singleton bean实例
 
 ``` java
 if (mbd.isSingleton()) {
-    sharedInstance = getSingleton(beanName, () -&gt; {
+    sharedInstance = getSingleton(beanName, () -> {
         // singletonFactory - ObjectFactory
         try { return createBean(beanName, mbd, args); }
         catch (BeansException ex) {    destroySingleton(beanName);    throw ex; }
@@ -311,37 +351,37 @@ if (mbd.isSingleton()) {
 
 - **createBean**
   根据BeanDefinition的内容，创建/初始化 bean instance
-- **[#getObjectBeanInstance](#getObjectBeanInstance &#34;wikilink&#34;)**
+- **[#getObjectBeanInstance](#getObjectBeanInstance "wikilink")**
   主要处理FactoryBean
 
-**createBean**被包装在lambda(singletonFactory)，重写`ObjectFactory#getObject()`，作为[getSingleton](#`DefaultSingletonBeanRegistry getSingleton(String, ObjectFactory)` &#34;wikilink&#34;)的参数
+**createBean**被包装在lambda(singletonFactory)，重写`ObjectFactory#getObject()`，作为[getSingleton](#`DefaultSingletonBeanRegistry getSingleton(String, ObjectFactory)` "wikilink")的参数
 
 ###### `DefaultSingletonBeanRegistry#getSingleton(String, ObjectFactory)`
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/createSingletonBean.webp&#34;
-alt=&#34;createSingletonBean&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;createSingletonBean&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/createSingletonBean.webp"
+alt="createSingletonBean" />
+<figcaption aria-hidden="true">createSingletonBean</figcaption>
+</figure>
 
-同样的，会先在缓存中查找该singleton，如果不存在，创建的核心逻辑在于[createBean](#AbstractAutowireCapableBeanFactory createBean &#34;wikilink&#34;)
+同样的，会先在缓存中查找该singleton，如果不存在，创建的核心逻辑在于[createBean](#AbstractAutowireCapableBeanFactory createBean "wikilink")
 
 ###### `AbstractAutowireCapableBeanFactory#createBean`
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/createBean.webp&#34;
-alt=&#34;createBean&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;createBean&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/createBean.webp"
+alt="createBean" />
+<figcaption aria-hidden="true">createBean</figcaption>
+</figure>
 
 1.  **resolveBeanClass**
     这一步骤用于锁定bean class，在没有显示指定beanClass的情况下，使用className加载beanClass
 2.  **验证method overrides**
     ==在BeanDefinitionReader 中有提到过lookup-method及replace-method，该步骤是为了确认以上两种配置中的method是否存在==
 3.  **执行InstantiationAwareBeanPostProcessor前处理器**(**postProcessBeforeInstantiation**)
-    如果这个步骤中生成了&#34;代理&#34;bean instance，则会有一个短路操作，`直接返回`该bean instance而不再执行doCreate，其中的核心逻辑为调用`this.applyBeanPostProcessorsBeforeInstantiation()` \^fcb215
+    如果这个步骤中生成了"代理"bean instance，则会有一个短路操作，`直接返回`该bean instance而不再执行doCreate，其中的核心逻辑为调用`this.applyBeanPostProcessorsBeforeInstantiation()` \^fcb215
 
 ``` java
 try {
@@ -360,7 +400,7 @@ try {
 }
 ```
 
-4.  **[doCreateBean](#`doCreateBean` &#34;wikilink&#34;)** (AbstractAutowireCapableBeanFactory)
+4.  **[doCreateBean](#`doCreateBean` "wikilink")** (AbstractAutowireCapableBeanFactory)
     真正bean的创建及初始化过程在此处实现
 
 ###### `doCreateBean`
@@ -377,7 +417,7 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
     }  
   
     Object bean = instanceWrapper.getWrappedInstance();  
-    Class&lt;?&gt; beanType = instanceWrapper.getWrappedClass();  
+    Class<?> beanType = instanceWrapper.getWrappedClass();  
     if (beanType != NullBean.class) {  
         mbd.resolvedTargetType = beanType;  
     }  
@@ -387,20 +427,20 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
             try {  
                 this.applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);  
             } catch (Throwable var17) {  
-                throw new BeanCreationException(mbd.getResourceDescription(), beanName, &#34;Post-processing of merged bean definition failed&#34;, var17);  
+                throw new BeanCreationException(mbd.getResourceDescription(), beanName, "Post-processing of merged bean definition failed", var17);  
             }  
   
             mbd.markAsPostProcessed();  
         }  
     }  
   
-    boolean earlySingletonExposure = mbd.isSingleton() &amp;&amp; this.allowCircularReferences &amp;&amp; this.isSingletonCurrentlyInCreation(beanName);  
+    boolean earlySingletonExposure = mbd.isSingleton() && this.allowCircularReferences && this.isSingletonCurrentlyInCreation(beanName);  
     if (earlySingletonExposure) {  
         if (this.logger.isTraceEnabled()) {  
-            this.logger.trace(&#34;Eagerly caching bean &#39;&#34; &#43; beanName &#43; &#34;&#39; to allow for resolving potential circular references&#34;);  
+            this.logger.trace("Eagerly caching bean '" + beanName + "' to allow for resolving potential circular references");  
         }  
   
-        this.addSingletonFactory(beanName, () -&gt; {  
+        this.addSingletonFactory(beanName, () -> {  
             return this.getEarlyBeanReference(beanName, mbd, bean);  
         });  
     }  
@@ -425,13 +465,13 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
         if (earlySingletonReference != null) {  
             if (exposedObject == bean) {  
                 exposedObject = earlySingletonReference;  
-            } else if (!this.allowRawInjectionDespiteWrapping &amp;&amp; this.hasDependentBean(beanName)) {  
+            } else if (!this.allowRawInjectionDespiteWrapping && this.hasDependentBean(beanName)) {  
                 String[] dependentBeans = this.getDependentBeans(beanName);  
-                Set&lt;String&gt; actualDependentBeans = new LinkedHashSet(dependentBeans.length);  
+                Set<String> actualDependentBeans = new LinkedHashSet(dependentBeans.length);  
                 String[] var12 = dependentBeans;  
                 int var13 = dependentBeans.length;  
   
-                for(int var14 = 0; var14 &lt; var13; &#43;&#43;var14) {  
+                for(int var14 = 0; var14 < var13; ++var14) {  
                     String dependentBean = var12[var14];  
                     if (!this.removeSingletonIfCreatedForTypeCheckOnly(dependentBean)) {  
                         actualDependentBeans.add(dependentBean);  
@@ -439,7 +479,7 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
                 }  
   
                 if (!actualDependentBeans.isEmpty()) {  
-                    throw new BeanCurrentlyInCreationException(beanName, &#34;Bean with name &#39;&#34; &#43; beanName &#43; &#34;&#39; has been injected into other beans [&#34; &#43; StringUtils.collectionToCommaDelimitedString(actualDependentBeans) &#43; &#34;] in its raw version as part of a circular reference, but has eventually been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of over-eager type matching - consider using &#39;getBeanNamesForType&#39; with the &#39;allowEagerInit&#39; flag turned off, for example.&#34;);  
+                    throw new BeanCurrentlyInCreationException(beanName, "Bean with name '" + beanName + "' has been injected into other beans [" + StringUtils.collectionToCommaDelimitedString(actualDependentBeans) + "] in its raw version as part of a circular reference, but has eventually been wrapped. This means that said other beans do not use the final version of the bean. This is often the result of over-eager type matching - consider using 'getBeanNamesForType' with the 'allowEagerInit' flag turned off, for example.");  
                 }  
             }  
         }  
@@ -449,36 +489,36 @@ protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable
         this.registerDisposableBeanIfNecessary(beanName, bean, mbd);  
         return exposedObject;  
     } catch (BeanDefinitionValidationException var16) {  
-        throw new BeanCreationException(mbd.getResourceDescription(), beanName, &#34;Invalid destruction signature&#34;, var16);  
+        throw new BeanCreationException(mbd.getResourceDescription(), beanName, "Invalid destruction signature", var16);  
     }  
 }
 ```
 
 可以将该流程细分为如下：
-1. [创建Bean实体](#创建Bean实体 `AbstractAutowireCapableBeanFactory createBeanInstance` &#34;wikilink&#34;)
-2. [BeanDefinition后处理](#BeanDefinition后处理 - `AbstractAutowireCapableBeanFactory applyMergedBeanDefinitionPostProcessors` &#34;wikilink&#34;)
-3. [提前暴露实体](#提前暴露实体 &#34;wikilink&#34;)
-4. [属性注入](#属性注入 - `AbstractAutowireCapableBeanFactory populateBean` &#34;wikilink&#34;)
-5. [初始化](#初始化 - `AbstractAutowireCapableBeanFactory initializeBean` &#34;wikilink&#34;)
-6. [注册Disposable](#注册Disposable - `AbstractBeanFactory registerDisposableBeanIfNecessary` &#34;wikilink&#34;)
+1. [创建Bean实体](#创建Bean实体 `AbstractAutowireCapableBeanFactory createBeanInstance` "wikilink")
+2. [BeanDefinition后处理](#BeanDefinition后处理 - `AbstractAutowireCapableBeanFactory applyMergedBeanDefinitionPostProcessors` "wikilink")
+3. [提前暴露实体](#提前暴露实体 "wikilink")
+4. [属性注入](#属性注入 - `AbstractAutowireCapableBeanFactory populateBean` "wikilink")
+5. [初始化](#初始化 - `AbstractAutowireCapableBeanFactory initializeBean` "wikilink")
+6. [注册Disposable](#注册Disposable - `AbstractBeanFactory registerDisposableBeanIfNecessary` "wikilink")
 
 ###### 创建Bean实体 - `AbstractAutowireCapableBeanFactory#createBeanInstance`
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/createBeanInstance_2.webp&#34;
-alt=&#34;createBeanInstance_2&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;createBeanInstance_2&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/createBeanInstance_2.webp"
+alt="createBeanInstance_2" />
+<figcaption aria-hidden="true">createBeanInstance_2</figcaption>
+</figure>
 
 1.  instanceSupplier
     从上面的流程图可以看出，创建bean实体不一定会使用到构造函数，可以使用Supplier的方式
 2.  factory method
-    [工厂模式](JavaSSM#^249d21 &#34;wikilink&#34;)
-    @Configuration &#43; @Bean的实现方式就是factory-bean &#43; factory-method
-    [对应的参数获取](#`ConstructorResolver resolvePreparedArguments` &#34;wikilink&#34;)
+    [工厂模式](JavaSSM#^249d21 "wikilink")
+    @Configuration + @Bean的实现方式就是factory-bean + factory-method
+    [对应的参数获取](#`ConstructorResolver resolvePreparedArguments` "wikilink")
 3.  有参构造函数
-    **AbstractAutowireCapableBeanFactory#autowireConstructor** -\&gt; **[ConstructorResolver#autowireConstructor](#`**ConstructorResolver autowireConstructor**` &#34;wikilink&#34;)**
+    **AbstractAutowireCapableBeanFactory#autowireConstructor** -\> **[ConstructorResolver#autowireConstructor](#`**ConstructorResolver autowireConstructor**` "wikilink")**
 4.  无参构造函数
     与有参构造创建过程一致，除了不需要参数的依赖注入，使用默认无参构造函数进行实例化
 
@@ -494,29 +534,29 @@ factoryBean可以通过beanFactory.getBean获取到（正是当前在讲的逻�
 
 该函数的作用是将BeanDefinition中定义的入参转换为需要的参数(==将BeanDefinitionReader中封装的对象转换==)
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/resolvePreparedArguments.webp&#34;
-alt=&#34;resolvePreparedArguments&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;resolvePreparedArguments&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/resolvePreparedArguments.webp"
+alt="resolvePreparedArguments" />
+<figcaption aria-hidden="true">resolvePreparedArguments</figcaption>
+</figure>
 
 **[More in blogs](https://segmentfault.com/a/1190000022309143#item-3-4)**
 
 ###### `ConstructorResolver#autowireConstructor`
 
-同样的，调用**ConstructorResolver#resolvePreparedArguments**进行参数的解析和转换(参数的依赖注入)，然后调用 **[ConstructorResolver#instantiate](#`ConstructorResolver instantiate` &#34;wikilink&#34;)** 来创建Bean实例
+同样的，调用**ConstructorResolver#resolvePreparedArguments**进行参数的解析和转换(参数的依赖注入)，然后调用 **[ConstructorResolver#instantiate](#`ConstructorResolver instantiate` "wikilink")** 来创建Bean实例
 
 ###### `ConstructorResolver#instantiate`
 
 内部并没有统一利用反射技术直接使用构造函数创建，而是通过`InstantiationStrategy.instantiate`进行创建
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/Instantiate.webp&#34;
-alt=&#34;Instantiate&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;Instantiate&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/Instantiate.webp"
+alt="Instantiate" />
+<figcaption aria-hidden="true">Instantiate</figcaption>
+</figure>
 
 - 没有设置override-method时，直接使用构造函数创建
 - 设置了override-method时，使用cglib技术构造代理类，并代理override方法
@@ -527,38 +567,38 @@ Spring默认的实例化策略为**CglibSubclassingInstantiationStrategy**
 
 在属性注入之前提供一次机会来对BeanDefinition进行处理，内部执行所有注册**MergedBeanDefinitionPostProcessor**的**postProcessMergedBeanDefinition**方法
 
-&gt; \[!hint\] **MergedBeanDefinitionPostProcessor**
-&gt; `MergedBeanDefinitionPostProcessor` 是一个特定类型的 `BeanPostProcessor`。`MergedBeanDefinitionPostProcessor` 的 `postProcessMergedBeanDefinition` 方法允许在实例化bean之后但在设置bean属性之前，对bean的定义（`BeanDefinition`）进行后处理。这个阶段是用于修改或增强bean定义的，例如，可以解析注解并相应地修改 `BeanDefinition` 的属性。
+> \[!hint\] **MergedBeanDefinitionPostProcessor**
+> `MergedBeanDefinitionPostProcessor` 是一个特定类型的 `BeanPostProcessor`。`MergedBeanDefinitionPostProcessor` 的 `postProcessMergedBeanDefinition` 方法允许在实例化bean之后但在设置bean属性之前，对bean的定义（`BeanDefinition`）进行后处理。这个阶段是用于修改或增强bean定义的，例如，可以解析注解并相应地修改 `BeanDefinition` 的属性。
 
-对于`MergedBeanDefinitionPostProcessor`的实现类`AutowiredAnnotationBeanPostProcessor`，其内部方法AutowiredAnnotationBeanPostProcessor#buildAutowiringMetadata 实现了两个注解类的解析 @Value 及 @Autowired ，找到注解修饰的Filed或者Method并缓存，具体逻辑在[属性注入](#属性注入 - `AbstractAutowireCapableBeanFactory populateBean` &#34;wikilink&#34;) \^autowiredAnnotationBeanPostProcessor1
+对于`MergedBeanDefinitionPostProcessor`的实现类`AutowiredAnnotationBeanPostProcessor`，其内部方法AutowiredAnnotationBeanPostProcessor#buildAutowiringMetadata 实现了两个注解类的解析 @Value 及 @Autowired ，找到注解修饰的Filed或者Method并缓存，具体逻辑在[属性注入](#属性注入 - `AbstractAutowireCapableBeanFactory populateBean` "wikilink") \^autowiredAnnotationBeanPostProcessor1
 
 ###### 提前暴露实体
 
 通过将**AbstractAutowireCapableBeanFactory#getEarlyBeanReference**封装为ObjectFactory，调用**DefaultSingletonBeanRegistry#addSingletonFactory**，将该ObjectFactory缓存在**DefaultSingletonBeanRegistry.singletonFactories**中，在`getBean`逻辑中的`getSingleton`会执行ObjectFactory将singleton提前暴露
 ==此处即为何时添加ObjectFactory进入singletonFactories中，解决循环依赖==
 
-&gt; 此时暴露的singleton-bean仅完成了bean的实例化，属性注入、初始化等逻辑均暂未执行
+> 此时暴露的singleton-bean仅完成了bean的实例化，属性注入、初始化等逻辑均暂未执行
 
 ###### 属性注入 - `AbstractAutowireCapableBeanFactory#populateBean`
 
-在[创建Bean实体](#创建Bean实体 - `AbstractAutowireCapableBeanFactory createBeanInstance` &#34;wikilink&#34;)中介绍了factory method方式及有参构造函数方式的参数注入逻辑，除此之外还有一种注入便是属性注入
+在[创建Bean实体](#创建Bean实体 - `AbstractAutowireCapableBeanFactory createBeanInstance` "wikilink")中介绍了factory method方式及有参构造函数方式的参数注入逻辑，除此之外还有一种注入便是属性注入
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/populateBean.webp&#34;
-alt=&#34;populateBean&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;populateBean&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/populateBean.webp"
+alt="populateBean" />
+<figcaption aria-hidden="true">populateBean</figcaption>
+</figure>
 
-流程中出现了两次**InstantiationAwareBeanPostProcessor**，在第一次出现中调用的`postProcessorAfterInstantiation`也与前面的**InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation**相同，拥有短路操作：如果该步骤生成了&#34;代理&#34;bean instance，`直接返回`该bean instance而不再执行后续的doCreate；如果有任意一个InstantiationAwareBeanPostProcessor的postProcessAfterInstantiation方法返回false，则会跳出属性注入的逻辑，官方对此的解释如下
+流程中出现了两次**InstantiationAwareBeanPostProcessor**，在第一次出现中调用的`postProcessorAfterInstantiation`也与前面的**InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation**相同，拥有短路操作：如果该步骤生成了"代理"bean instance，`直接返回`该bean instance而不再执行后续的doCreate；如果有任意一个InstantiationAwareBeanPostProcessor的postProcessAfterInstantiation方法返回false，则会跳出属性注入的逻辑，官方对此的解释如下
 
-&gt; Give any InstantiationAwareBeanPostProcessors the opportunity to modify the state of the bean before properties are set. This can be used, for example, to support styles of field injection.
+> Give any InstantiationAwareBeanPostProcessors the opportunity to modify the state of the bean before properties are set. This can be used, for example, to support styles of field injection.
 
-**autowireByName**及**autowireByType**方法作为&#34;候补&#34;补充BeanDefinition的propertyValues
+**autowireByName**及**autowireByType**方法作为"候补"补充BeanDefinition的propertyValues
 
 **PropertyValue**中记录了需要注入的属性信息及需要注入的属性值，那BeanDefinition的propertyValues都来自哪里？xml中的bean配置、自定义的BeanDefinition等
 
-通过注解修饰的属性(方法)通过**InstantiationAwareBeanPostProcessor#postProcessProperties**进行注入 -\&gt; ==AutowiredAnnotationBeanPostProcessor#postProcessProperties &amp; CommonAnnotationBeanPostProcessor#postProcessProperties==
+通过注解修饰的属性(方法)通过**InstantiationAwareBeanPostProcessor#postProcessProperties**进行注入 -\> ==AutowiredAnnotationBeanPostProcessor#postProcessProperties & CommonAnnotationBeanPostProcessor#postProcessProperties==
 
 最后，通过AbstractAutowireCapableBeanFactory#applyPropertyValues 将**PropertyValue**中记录的需要注入的属性，已经依赖的类型（String、RuntimeBeanReference、等），根据不同的类型解析依赖的bean并设置到对应的属性上（==此过程与DefaultListableBeanFactory#doResolveDependency相似==）
 
@@ -566,18 +606,18 @@ alt=&#34;populateBean&#34; /&gt;
 
 以上，完成了bean实例的创建和属性注入，之后还有一些初始化的方法，比如各种**Aware**的**setXxx**是如何调用的、@PostConstruct是怎么调用的？
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/initializeBean.webp&#34;
-alt=&#34;initializeBean&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;initializeBean&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/initializeBean.webp"
+alt="initializeBean" />
+<figcaption aria-hidden="true">initializeBean</figcaption>
+</figure>
 
 ###### 注册Disposable - `AbstractBeanFactory#registerDisposableBeanIfNecessary`
 
 至此，终于完成了bean实例的创建、属性注入以及之后的初始化，此后便可以开始使用了
 
-在使用Spring的过程中经常还会碰到设置销毁逻辑的情况，如数据库连接池、线程池等等，在Spring销毁bean的时候还需要做一些处理，类似于C&#43;&#43;中的析构
+在使用Spring的过程中经常还会碰到设置销毁逻辑的情况，如数据库连接池、线程池等等，在Spring销毁bean的时候还需要做一些处理，类似于C++中的析构
 
 在bean的创建逻辑中，最后一个步骤则是注册bean的销毁逻辑（DisposableBean）
 
@@ -588,7 +628,7 @@ alt=&#34;initializeBean&#34; /&gt;
 3.  指定了destroy-method（如xml中指定或者BeanDefinition中直接设置）或者存在**@PreDestroy** 注解的方法（**CommonAnnotationBeanPostProcessor.requiresDestruction**）
 
 ``` java
-if (!mbd.isPrototype() &amp;&amp; requiresDestruction(bean, mbd))
+if (!mbd.isPrototype() && requiresDestruction(bean, mbd))
 ```
 
 满足以上条件的bean会被封装为**DisposableBeanAdapter**，并注册在**DefaultSingletonBeanRegistry.disposableBeans**中
@@ -624,7 +664,7 @@ else {
     final Scope scope = this.scopes.get(scopeName);
     if (scope == null) { /* throw exception */ }
     try {
-        Object scopedInstance = scope.get(beanName, () -&gt; {
+        Object scopedInstance = scope.get(beanName, () -> {
             beforePrototypeCreation(beanName);
             // createBean被封装在Scope#get函数的lambda参数ObjectFactory中
             try { return createBean(beanName, mbd, args); }
@@ -642,7 +682,7 @@ public interface Scope {
   /**
    * Return the object with the given name from the underlying scope
    */
-  Object get(String name, ObjectFactory&lt;?&gt; objectFactory);
+  Object get(String name, ObjectFactory<?> objectFactory);
   
    /**
    * Remove the object with the given name from the underlying scope.
@@ -670,32 +710,32 @@ bean的创建过程始于**DefaultListableBeanFactory#getBean**，销毁过程�
 2.  **DefaultSingletonBeanRegistry.dependentBeanMap**
     对于存在依赖注入关系的bean，会将bean的依赖关系缓存在此处（dependentBeanMap: 哪些bean依赖了我; dependenciesForBeanMap: 我依赖了哪些bean）
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/destory.webp&#34;
-alt=&#34;destory&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;destory&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/destory.webp"
+alt="destory" />
+<figcaption aria-hidden="true">destory</figcaption>
+</figure>
 
-从上图中可以看出，bean的销毁顺序与创建顺序正好相反，如果有 beanA --dependsOn--\&gt; beanB --\&gt; beanC ，创建（getBean）时一定是beanC -\&gt; beanB -\&gt; beanA，销毁时一定是 beanA -\&gt; beanB -\&gt; beanC，以此避免因为依赖关系造成的一些异常情况
+从上图中可以看出，bean的销毁顺序与创建顺序正好相反，如果有 beanA --dependsOn--\> beanB --\> beanC ，创建（getBean）时一定是beanC -\> beanB -\> beanA，销毁时一定是 beanA -\> beanB -\> beanC，以此避免因为依赖关系造成的一些异常情况
 
 #### 循环依赖
 
-**earlySingletonObject**是用来解决循环依赖的问题，具体时机是在实例化完后属性注入之前，会提前将当前的bean实体暴露出来，以防止在属性注入过程中所注入的bean又依赖当前的bean造成的类似&#34;死锁&#34;的状态
+**earlySingletonObject**是用来解决循环依赖的问题，具体时机是在实例化完后属性注入之前，会提前将当前的bean实体暴露出来，以防止在属性注入过程中所注入的bean又依赖当前的bean造成的类似"死锁"的状态
 
 但是存在以下情况，Spring依旧会陷入循环依赖死锁：
-&#43; 显式设置dependsOn的循环依赖
++ 显式设置dependsOn的循环依赖
 
 ``` java
-@DependsOn(&#34;beanB&#34;)
+@DependsOn("beanB")
 @Component
 public class BeanA {}
 
-@DependsOn(&#34;beanC&#34;)
+@DependsOn("beanC")
 @Component
 public class BeanB {}
 
-@DependsOn(&#34;beanA&#34;)
+@DependsOn("beanA")
 @Component
 public class BeanC {}
 ```
@@ -766,34 +806,34 @@ public BeanC beanC(BeanA beanA) {
 }
 ```
 
-以&#34;bean创建且暴露earlySingleton&#34;为节点，在此之前处理依赖的有`instance supplier parameter`、`factory method parameter`、`constructor parameter`、等，在此之后处理的依赖有 `class property`、`setter parameter`等
+以"bean创建且暴露earlySingleton"为节点，在此之前处理依赖的有`instance supplier parameter`、`factory method parameter`、`constructor parameter`、等，在此之后处理的依赖有 `class property`、`setter parameter`等
 
 # ApplicationContext
 
 **BeanFactory**实现了IoC的基础能力，而**ApplicationContext**是**BeanFactory**的子类，除了继承IoC的基础能力外
-&#43; 支持国际化 (MessageSource)
-&#43; 支持资源访问 (ResourcePatternResolver)
-&#43; 事件机制 (ApplicationEventPublisher)
-&#43; 默认初始化所有Singleton
-&#43; 提供扩展能力
++ 支持国际化 (MessageSource)
++ 支持资源访问 (ResourcePatternResolver)
++ 事件机制 (ApplicationEventPublisher)
++ 默认初始化所有Singleton
++ 提供扩展能力
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/ApplicationContext.webp&#34;
-alt=&#34;ApplicationContext&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;ApplicationContext&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/ApplicationContext.webp"
+alt="ApplicationContext" />
+<figcaption aria-hidden="true">ApplicationContext</figcaption>
+</figure>
 
 无论何种功能的ApplicationContext，在做完基本的初始化后均会调用**AbstractApplicationContext#Refresh**
 
 ## `AbstractApplicationContext#Refresh`
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/refresh.webp&#34;
-alt=&#34;refresh&#34; /&gt;
-&lt;figcaption aria-hidden=&#34;true&#34;&gt;refresh&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/refresh.webp"
+alt="refresh" />
+<figcaption aria-hidden="true">refresh</figcaption>
+</figure>
 
 ### 准备上下文 - `AbstractApplicationContext#prepareRefresh`
 
@@ -804,7 +844,7 @@ public class MyClasspathXmlApplicationContext extends ClassPathXmlApplicationCon
     @Override
     protected void initPropertySources() {
         super.initPropertySources();
-        getEnvironment().setRequiredProperties(&#34;runtimeEnv&#34;);
+        getEnvironment().setRequiredProperties("runtimeEnv");
     }
 }
 ```
@@ -818,26 +858,26 @@ public class MyClasspathXmlApplicationContext extends ClassPathXmlApplicationCon
 对于**AbstractRefreshableApplicationContext**，refreshBeanFactory基本步骤为
 1. 创建BeanFactory (**DefaultListableBeanFactory**)
 2. 设置BeanFactory
-3. **[加载BeanDefinition](#Bean的注册 &#34;wikilink&#34;)**
+3. **[加载BeanDefinition](#Bean的注册 "wikilink")**
 
 在第3步中，AbstractXmlApplicationContext的实现则是对xml配置文件的解析及加载；AnnotationConfigWebApplicationContext的实现则是对class文件的扫描并加载，以及其他基于AbstractRefreshableApplicationContext的ApplicationContext实现
 
 对于**GenericApplicationContext**，BeanFactory的创建及BeanDefinition的加载在**refresh**调用之前早已完成，refreshBeanFactory的实现则是对BeanFactory加载状态的简单校验
 
-#### AbstractRefreshableApplicationContext &amp; GenericApplicationContext
+#### AbstractRefreshableApplicationContext & GenericApplicationContext
 
 ##### AbstractRefreshableApplicationContext
 
 对于继承自 `AbstractRefreshableApplicationContext` 的上下文，例如 `ClassPathXmlApplicationContext` 或 `AnnotationConfigApplicationContext`，它们通过覆盖 `refreshBeanFactory()` 方法来实现具体的 BeanDefinition 加载逻辑。这些上下文类型专门用于从外部资源（如 XML 文件、Java 配置类等）加载配置信息，并将这些配置信息解析为一组 BeanDefinition，然后注册到内部的 BeanFactory 中。这个过程通常发生在上下文的 `refresh()` 方法调用过程中（我们正在讨论的），这个方法不仅负责加载和注册 BeanDefinition，还包括初始化单例bean、处理别名定义、注册BeanPostProcessor等一系列容器启动时的活动。
 
-&gt; \[!QUOTE\] refresh()关键步骤 \^configurerRelated
-&gt; 1. **创建 BeanFactory**：`AbstractRefreshableApplicationContext` 首先会创建一个新的 `BeanFactory` 实例，这通常是一个 `DefaultListableBeanFactory` 实例。这个 `BeanFactory` 实现了 `BeanDefinitionRegistry` 接口，使得它能够注册 BeanDefinition。
-&gt; 2. ==**加载 BeanDefinition**：接着，上下文会调用特定的方法（例如，对于基于 XML 的配置，会使用 `XmlBeanDefinitionReader`；对于基于注解的配置，会使用 `AnnotatedBeanDefinitionReader` 和 `ClassPathBeanDefinitionScanner`）来加载 BeanDefinition。这些 Reader 和 Scanner 实现了 `BeanDefinitionRegistry` 接口的 `registerBeanDefinition` 方法来实际完成注册工作。==
-&gt; 3. **刷新 BeanFactory**：加载完所有 BeanDefinition 后，`AbstractRefreshableApplicationContext` 会对 `BeanFactory` 进行刷新，这涉及到预实例化单例、注册 `BeanPostProcessor`、初始化剩余的非懒加载单例等一系列操作。
-&gt; 4. **发布事件**：在整个容器刷新过程中，还会发布各种应用事件，如 `ContextRefreshedEvent`，允许应用中的其他组件对这些事件作出响应。
-&gt;
-&gt; 通过上述步骤，`AbstractRefreshableApplicationContext` 完成了 BeanDefinition 的加载、注册以及整个 Spring 容器的初始化和刷新工作。在这个过程中，`BeanDefinitionRegistry` 接口扮演了 BeanDefinition 注册的关键角色
-&gt; ##### GenericApplicationContext
+> \[!QUOTE\] refresh()关键步骤 \^configurerRelated
+> 1. **创建 BeanFactory**：`AbstractRefreshableApplicationContext` 首先会创建一个新的 `BeanFactory` 实例，这通常是一个 `DefaultListableBeanFactory` 实例。这个 `BeanFactory` 实现了 `BeanDefinitionRegistry` 接口，使得它能够注册 BeanDefinition。
+> 2. ==**加载 BeanDefinition**：接着，上下文会调用特定的方法（例如，对于基于 XML 的配置，会使用 `XmlBeanDefinitionReader`；对于基于注解的配置，会使用 `AnnotatedBeanDefinitionReader` 和 `ClassPathBeanDefinitionScanner`）来加载 BeanDefinition。这些 Reader 和 Scanner 实现了 `BeanDefinitionRegistry` 接口的 `registerBeanDefinition` 方法来实际完成注册工作。==
+> 3. **刷新 BeanFactory**：加载完所有 BeanDefinition 后，`AbstractRefreshableApplicationContext` 会对 `BeanFactory` 进行刷新，这涉及到预实例化单例、注册 `BeanPostProcessor`、初始化剩余的非懒加载单例等一系列操作。
+> 4. **发布事件**：在整个容器刷新过程中，还会发布各种应用事件，如 `ContextRefreshedEvent`，允许应用中的其他组件对这些事件作出响应。
+>
+> 通过上述步骤，`AbstractRefreshableApplicationContext` 完成了 BeanDefinition 的加载、注册以及整个 Spring 容器的初始化和刷新工作。在这个过程中，`BeanDefinitionRegistry` 接口扮演了 BeanDefinition 注册的关键角色
+> ##### GenericApplicationContext
 
 `GenericApplicationContext` 直接实现了 `BeanDefinitionRegistry` 接口，使得它可以在运行时动态注册 BeanDefinition。与 `AbstractRefreshableApplicationContext` 的子类不同，`GenericApplicationContext` 并不专门依赖于外部资源来加载 BeanDefinition。相反，它提供了一套程序化的接口，允许开发者直接在代码中通过调用 `registerBeanDefinition(String beanName, BeanDefinition beanDefinition)` 方法来注册 BeanDefinition。这种方式使得 `GenericApplicationContext` 非常灵活，适用于那些需要在运行时动态调整 Spring 配置的场景。
 
@@ -861,7 +901,7 @@ public class MyClasspathXmlApplicationContext extends ClassPathXmlApplicationCon
 
 #### 注册几个特殊Aware的处理逻辑
 
-在Bean实例化、注入依赖之后会对Bean进行[最后的初始化](#初始化 - `AbstractAutowireCapableBeanFactory initializeBean` &#34;wikilink&#34;)，调用相应的setter方法分别针对**BeanNameAware**、**BeanClassLoaderAware**、**BeanFactoryAware**进行处理
+在Bean实例化、注入依赖之后会对Bean进行[最后的初始化](#初始化 - `AbstractAutowireCapableBeanFactory initializeBean` "wikilink")，调用相应的setter方法分别针对**BeanNameAware**、**BeanClassLoaderAware**、**BeanFactoryAware**进行处理
 
 在该函数中，会注册几个特殊的**BeanPostProcessor**
 
@@ -882,8 +922,8 @@ beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
 - ApplicationEventPublisher
 - ApplicationContext
 - Environment
-- *systemProperties* - Environment#.getSystemProperties:Map\&lt;String, Object\&gt;
-- systemEnvironment - Environment#.getSystemEnvironment:Map\&lt;String, Object\&gt;
+- *systemProperties* - Environment#.getSystemProperties:Map\<String, Object\>
+- systemEnvironment - Environment#.getSystemEnvironment:Map\<String, Object\>
   ### `AbstractApplicationContext#refresh#postProcessBeanFactory()`
 
 对于不同的实现类，注册相应的`BeanPostProcessor`，例如`ServletWebServerApplicationContext`
@@ -897,7 +937,7 @@ beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
 ``` java
 public interface BeanFactoryPostProcessor {
     /**
-     * Modify the application context&#39;s internal bean factory after its standard
+     * Modify the application context's internal bean factory after its standard
      * initialization. All bean definitions will have been loaded, but no beans
      * will have been instantiated yet. This allows for overriding or adding
      * properties even to eager-initializing beans.
@@ -908,13 +948,13 @@ public interface BeanFactoryPostProcessor {
 
 核心逻辑如下
 
-&lt;figure&gt;
-&lt;img
-src=&#34;https://minio.dionysunrsshub.top/myimages/2024-img/invokeBeanFactoryPostProcessors.webp&#34;
-alt=&#34;invokeBeanFactoryPostProcessors&#34; /&gt;
-&lt;figcaption
-aria-hidden=&#34;true&#34;&gt;invokeBeanFactoryPostProcessors&lt;/figcaption&gt;
-&lt;/figure&gt;
+<figure>
+<img
+src="https://minio.dionysunrsshub.top/myimages/2024-img/invokeBeanFactoryPostProcessors.webp"
+alt="invokeBeanFactoryPostProcessors" />
+<figcaption
+aria-hidden="true">invokeBeanFactoryPostProcessors</figcaption>
+</figure>
 
 其中涉及两种类型，**BeanDefinitionRegistryPostProcessor**及**BeanFactoryPostProcessor**，前者为后者的子类，**BeanDefinitionRegistryPostProcessors**提供了额外的接口**postProcessBeanDefinitionRegistry**，用于更加方便地**动态**地注册额外的BeanDefinition (`registryProcessor.postProcessBeanDefinitionRegistry(registry)`)，如读取配置文件（json、properties、yml）并解析（或者任何其他的形式），并通过该接口注册相应的BeanDefinition，基于Spring Boot Starter的很多框架均使用该方式进行bean的注册
 
@@ -930,7 +970,7 @@ b
 public interface BeanPostProcessor {
     /**
      * Apply this BeanPostProcessor to the given new bean instance before any bean
-     * initialization callbacks (like InitializingBean&#39;s afterPropertiesSet
+     * initialization callbacks (like InitializingBean's afterPropertiesSet
      * or a custom init-method). 
      * The returned bean instance may be a wrapper around the original.
      */
@@ -941,7 +981,7 @@ public interface BeanPostProcessor {
 
     /**
      * Apply this BeanPostProcessor to the given new bean instance after any bean
-     * initialization callbacks (like InitializingBean&#39;s afterPropertiesSet
+     * initialization callbacks (like InitializingBean's afterPropertiesSet
      * or a custom init-method).
      * The returned bean instance may be a wrapper around the original.
      */
@@ -961,12 +1001,12 @@ public interface BeanPostProcessor {
 
 ##### InstantiationAwareBeanPostProcessor
 
-该接口继承自**BeanPostProcessor**，其同样有两个方法，一个在创建bean实例之前调用([createBean](#`AbstractAutowireCapableBeanFactory createBean` &#34;wikilink&#34;))，一个在创建bean实例之后、属性注入之前调用([属性注入](#属性注入 - `AbstractAutowireCapableBeanFactory populateBean` &#34;wikilink&#34;))
+该接口继承自**BeanPostProcessor**，其同样有两个方法，一个在创建bean实例之前调用([createBean](#`AbstractAutowireCapableBeanFactory createBean` "wikilink"))，一个在创建bean实例之后、属性注入之前调用([属性注入](#属性注入 - `AbstractAutowireCapableBeanFactory populateBean` "wikilink"))
 
 ``` java
 public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {  
     @Nullable  
-    default Object postProcessBeforeInstantiation(Class&lt;?&gt; beanClass, String beanName) throws BeansException {  
+    default Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {  
         return null;  
     }  
   
@@ -988,7 +1028,7 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 4. 按顺序依次注册priorityOrderedPostProcessors、orderedPostProcessors、nonOrderedPostProcessors
 5. 最后注册internalPostProcessors
 
-**MergedBeanDefinitionPostProcessor**其有一个接口**postProcessMergedBeanDefinition**，在bean实例化完成后属性注入之前被调用，可以用来对当前的BeanDefinition做进一步的修改，如增加PropertyValue等，实现特殊的属性依赖注入，参考[BeanDefinition后处理](#BeanDefinition后处理 - `AbstractAutowireCapableBeanFactory applyMergedBeanDefinitionPostProcessors` &#34;wikilink&#34;)与[属性注入](#属性注入 - `AbstractAutowireCapableBeanFactory populateBean` &#34;wikilink&#34;)
+**MergedBeanDefinitionPostProcessor**其有一个接口**postProcessMergedBeanDefinition**，在bean实例化完成后属性注入之前被调用，可以用来对当前的BeanDefinition做进一步的修改，如增加PropertyValue等，实现特殊的属性依赖注入，参考[BeanDefinition后处理](#BeanDefinition后处理 - `AbstractAutowireCapableBeanFactory applyMergedBeanDefinitionPostProcessors` "wikilink")与[属性注入](#属性注入 - `AbstractAutowireCapableBeanFactory populateBean` "wikilink")
 
 ### 初始化MessageSource - `AbstractApplicationContext#initMessageSource`
 
@@ -996,7 +1036,7 @@ Spring的**MessageSource**提供了国际化能力，在开发者未注册Messag
 
 ### 初始化ApplicationEventMulticaster - `AbstractApplicationContext#initApplicationEventMulticaster`
 
-Spring提供了一套事件（ApplicationEvent）的发布&amp;订阅机制，开发者可自定义事件（继承**ApplicationEvent**），注册事件监听器来订阅消费事件（实现**ApplicationListener** 或使用`@EventListener` 注解），并使用**ApplicationEventPublisher**（直接依赖注入或者使用**ApplicationEventPublisherAware**）发送事件，使用示例可参考[https://www.baeldung.com/spri...](https://link.segmentfault.com/?enc=4cCMPoMwXwyBCW1s98GYow%3D%3D.zKZN5tVMJt9hm6zq2%2B3EFcY86QBjsZcPTtzSUaDvc8amL7BSpuMwZBbobUSICoS%2B)
+Spring提供了一套事件（ApplicationEvent）的发布&订阅机制，开发者可自定义事件（继承**ApplicationEvent**），注册事件监听器来订阅消费事件（实现**ApplicationListener** 或使用`@EventListener` 注解），并使用**ApplicationEventPublisher**（直接依赖注入或者使用**ApplicationEventPublisherAware**）发送事件，使用示例可参考[https://www.baeldung.com/spri...](https://link.segmentfault.com/?enc=4cCMPoMwXwyBCW1s98GYow%3D%3D.zKZN5tVMJt9hm6zq2%2B3EFcY86QBjsZcPTtzSUaDvc8amL7BSpuMwZBbobUSICoS%2B)
 
 其实ApplicationContext实现了ApplicationEventPublisher，跟踪其publishEvent方法会发现，最终调用了**AbstractApplicationContext#applicationEventMulticaster.multicastEvent**，开发者可以自行注册一个**ApplicationEventMulticaster**，如果没有Spring会提供一个默认的**SimpleApplicationEventMulticaster**
 
@@ -1007,10 +1047,10 @@ Spring提供了一套事件（ApplicationEvent）的发布&amp;订阅机制，�
 public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
     ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
     Executor executor = getTaskExecutor();
-    for (ApplicationListener&lt;?&gt; listener : getApplicationListeners(event, type)) {
+    for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
         if (executor != null) {
       // 设置了executor，则异步执行
-            executor.execute(() -&gt; invokeListener(listener, event));
+            executor.execute(() -> invokeListener(listener, event));
         }
         else {
       // 否则同步执行
@@ -1042,7 +1082,7 @@ public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableTyp
 1.  如果自定义了**ConversionService**(另一种注入类型转换的方式)类型bean且bean-name为*conversionService*，则将其注册到BeanFactory中
 2.  如果BeanFactory中不存在**EmbeddedValueResolver**（**PropertyResourceConfigurer**会注册一个**PlaceholderResolvingStringValueResolver**到BeanFactory中），则会注册一个默认的**StringValueResolver**用来处理 `${ ... }`类型的值（**Environment#resolvePlaceholders**）
 3.  找到所有非Lazy的Singleton BeanDefinition进行实例化（**getBean**）
-    1.  如果是FactoryBean，则在bean name前加上&#39;&amp;&#39;，并实例化该FactoryBean，随后实例化真实的bean
+    1.  如果是FactoryBean，则在bean name前加上'&'，并实例化该FactoryBean，随后实例化真实的bean
     2.  如果不是FactoryBean，则直接实例化该bean
 4.  执行**SmartInitializingSingleton**实现类的**afterSingletonsInstantiated**方法
 
@@ -1054,11 +1094,11 @@ public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableTyp
 
 Spring提供了**LifecycleProcessor**用于监听BeanFactory的refresh及close，在BeanFactory的各阶段会调用**LifecycleProcessor**的**onFresh**及**onClose**方法
 
-开发者可以自行注册**LifecycleProcessor**类型的bean，bean-name必须为&#34;lifecycleProcessor&#34;，否则Spring会提供一个默认的**DefaultLifecycleProcessor**
+开发者可以自行注册**LifecycleProcessor**类型的bean，bean-name必须为"lifecycleProcessor"，否则Spring会提供一个默认的**DefaultLifecycleProcessor**
 
 之后则会触发**LifecycleProcessor**的**onFresh**方法
 
-&gt; 除此之外，还可以监听**ContextRefreshedEvent**及**ContextClosedEvent**消息
+> 除此之外，还可以监听**ContextRefreshedEvent**及**ContextClosedEvent**消息
 
 #### refresh事件
 
@@ -1071,7 +1111,7 @@ Spring提供了**LifecycleProcessor**用于监听BeanFactory的refresh及close�
 ``` java
 public void registerShutdownHook() {  
     if (this.shutdownHook == null) {  
-        this.shutdownHook = new Thread(&#34;SpringContextShutdownHook&#34;) {  
+        this.shutdownHook = new Thread("SpringContextShutdownHook") {  
             public void run() {  
                 synchronized(AbstractApplicationContext.this.startupShutdownMonitor) {  
                     AbstractApplicationContext.this.doClose();  
@@ -1090,12 +1130,12 @@ public void registerShutdownHook() {
 
 1.  发出**ContextClosedEvent**事件
 2.  触发**LifecycleProcessor**的**onClose**方法
-3.  销毁bean，细节参考[Bean销毁过程](#Bean销毁过程 &#34;wikilink&#34;)
+3.  销毁bean，细节参考[Bean销毁过程](#Bean销毁过程 "wikilink")
 4.  由子类实现的**AbstractApplicationContext#closeBeanFactory**及**AbstractApplicationContext#onClose**方法
 
 ## ASIDE
 
-- BeanDefinition的加载在[AbstractApplicationContext#obtainFreshBeanFactory](#加载BeanFactory - `AbstractApplicationContext obtainFreshBeanFactory` &#34;wikilink&#34;)中实现
+- BeanDefinition的加载在[AbstractApplicationContext#obtainFreshBeanFactory](#加载BeanFactory - `AbstractApplicationContext obtainFreshBeanFactory` "wikilink")中实现
 - TODO
   - `#{ ... }`类型值的解析由**StandardBeanExpressionResolve**实现
   - `${ ... }`类型值的解析由**PlaceholderResolvingStringValueResolver**实现
@@ -1103,14 +1143,14 @@ public void registerShutdownHook() {
   - Spring提供了众多Aware，若需要自定义Aware可以通过**BeanPostProcessor**实现
   - BeanFactoryPostProcessor用于在实例化bean之前对BeanFactory做额外的动作
     如，**PropertyResourceConfigurer**用来将**PlaceholderResolvingStringValueResolver**注册到BeanFactory的embeddedValueResolvers中
-- [BeanDefinitionRegistryPostProcessor](#激活BeanFactoryPostProcessor - `AbstractApplicationContext invokeBeanFactoryPostProcessors` &#34;wikilink&#34;)用于在实例化bean之前（动态）注册额外的BeanDefinition \^fa1ce8
-- [BeanPostProcessor](#BeanPostProcessor &#34;wikilink&#34;)用于在调用bean的init-method前后，对实例化完成的bean做一些额外的干预
+- [BeanDefinitionRegistryPostProcessor](#激活BeanFactoryPostProcessor - `AbstractApplicationContext invokeBeanFactoryPostProcessors` "wikilink")用于在实例化bean之前（动态）注册额外的BeanDefinition \^fa1ce8
+- [BeanPostProcessor](#BeanPostProcessor "wikilink")用于在调用bean的init-method前后，对实例化完成的bean做一些额外的干预
   如，**CommonAnnotationBeanPostProcessor**用来处理@PostConstructor，**AbstractAdvisingBeanPostProcessor**用来实现AOP
 
 # ApplicationContext具体实现类 - AnnotationConfigApplicationContext
 
 ``` java
-public AnnotationConfigApplicationContext(Class&lt;?&gt;... componentClasses) { 
+public AnnotationConfigApplicationContext(Class<?>... componentClasses) { 
     this(); //1. 首先会调用自己的无参构造 
     register(componentClasses); //2. 然后注册我们传入的配置类 
     refresh(); //3. 最后进行刷新操作（关键） 
@@ -1121,7 +1161,7 @@ public AnnotationConfigApplicationContext(Class&lt;?&gt;... componentClasses) {
 
 ``` java
 public AnnotationConfigApplicationContext() {
-        StartupStep createAnnotatedBeanDefReader = this.getApplicationStartup().start(&#34;spring.context.annotated-bean-reader.create&#34;);
+        StartupStep createAnnotatedBeanDefReader = this.getApplicationStartup().start("spring.context.annotated-bean-reader.create");
       //创建AnnotatedBeanDefinitionReader对象，用于后续处理 @Bean 注解
         this.reader = new AnnotatedBeanDefinitionReader(this);
         createAnnotatedBeanDefReader.end();
@@ -1134,8 +1174,8 @@ public AnnotationConfigApplicationContext() {
 
 ``` java
 public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry, Environment environment) {
-        Assert.notNull(registry, &#34;BeanDefinitionRegistry must not be null&#34;);
-        Assert.notNull(environment, &#34;Environment must not be null&#34;);
+        Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+        Assert.notNull(environment, "Environment must not be null");
         this.registry = registry;
         this.conditionEvaluator = new ConditionEvaluator(registry, environment, null);
       //这里注册了注解处理配置相关的后置处理器
@@ -1143,37 +1183,37 @@ public AnnotatedBeanDefinitionReader(BeanDefinitionRegistry registry, Environmen
 }
 ```
 
-这里会将ConfigurationClassPostProcessor后置处理器加入到BeanFactory中，它继承自BeanFactoryPostProcessor，也就是说一会会在BeanFactory初始化完成之后进行后置处理，同时这里也会注册一个[AutowiredAnnotationBeanPostProcessor](#^autowiredAnnotationBeanPostProcessor1 &#34;wikilink&#34;)后置处理器到BeanFactory，它继承自BeanPostProcessor，用于处理后续生成的Bean对象，其实看名字就知道，这玩意就是为了处理@Autowire、@Value这种注解，用于自动注入
+这里会将ConfigurationClassPostProcessor后置处理器加入到BeanFactory中，它继承自BeanFactoryPostProcessor，也就是说一会会在BeanFactory初始化完成之后进行后置处理，同时这里也会注册一个[AutowiredAnnotationBeanPostProcessor](#^autowiredAnnotationBeanPostProcessor1 "wikilink")后置处理器到BeanFactory，它继承自BeanPostProcessor，用于处理后续生成的Bean对象，其实看名字就知道，这玩意就是为了处理@Autowire、@Value这种注解，用于自动注入
 
 ## 注册传入的配置类 - `register`
 
 ``` java
 @Override
-public void register(Class&lt;?&gt;... componentClasses) {
-        Assert.notEmpty(componentClasses, &#34;At least one component class must be specified&#34;);
-        StartupStep registerComponentClass = this.getApplicationStartup().start(&#34;spring.context.component-classes.register&#34;)
-                .tag(&#34;classes&#34;, () -&gt; Arrays.toString(componentClasses));
+public void register(Class<?>... componentClasses) {
+        Assert.notEmpty(componentClasses, "At least one component class must be specified");
+        StartupStep registerComponentClass = this.getApplicationStartup().start("spring.context.component-classes.register")
+                .tag("classes", () -> Arrays.toString(componentClasses));
       //使用我们上面创建的Reader注册配置类
         this.reader.register(componentClasses);
         registerComponentClass.end();
 }
 ```
 
-## [Refresh](#`AbstractApplicationContext Refresh` &#34;wikilink&#34;)
+## [Refresh](#`AbstractApplicationContext Refresh` "wikilink")
 
 # ==TODO==
 
 - ☒ Spring AOP
 - ☐ 注解运行逻辑
   - [`@Component`与`@Bean`的区别](https://www.jianshu.com/p/3fbfbb843b63)
-  - [JavaSSM#\^473168](JavaSSM#^473168 &#34;wikilink&#34;)
+  - [JavaSSM#\^473168](JavaSSM#^473168 "wikilink")
   - ☐ @Bean 在处理属性注入时？
 - ☒ AnnotationConfigApplicationContext - 与 配置类的关系 - 具体例子
 - ☐ BeanDefinitionReader和BeanDefinitionRegistry
 - ☐ 完善调用链图
   # 配置类的注册 - `ConfigurationClassPostProcessor`
 
-ConfigurationClassPostProcessor继承自[BeanDefinitionRegistryPostProcessor](#^fa1ce8 &#34;wikilink&#34;) -\&gt; BeanFactoryPostProcessor，这个后置处理器是Spring中提供的，这是专门用于处理配置类的后置处理器，其中`ImportBeanDefinitionRegistrar`，还有`ImportSelector`都是靠它来处理
+ConfigurationClassPostProcessor继承自[BeanDefinitionRegistryPostProcessor](#^fa1ce8 "wikilink") -\> BeanFactoryPostProcessor，这个后置处理器是Spring中提供的，这是专门用于处理配置类的后置处理器，其中`ImportBeanDefinitionRegistrar`，还有`ImportSelector`都是靠它来处理
 
 ## `ConfigurationClassPostProcessor#postProcessBeanDefinitionRegistry`
 
@@ -1183,7 +1223,7 @@ ConfigurationClassPostProcessor继承自[BeanDefinitionRegistryPostProcessor](#^
 public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
     // 将Spring认为可能是配置类的候选类加入candidates，例如@Configuration、@Component
     // @ComponentScan、@Import，以及通过实现ImportSelector或ImportBeanDefinitionRegistrar间接引入的配置
-    List&lt;BeanDefinitionHolder&gt; configCandidates = new ArrayList&lt;&gt;();
+    List<BeanDefinitionHolder> configCandidates = new ArrayList<>();
     // 直接取出所有已注册Bean的名称
     String[] candidateNames = registry.getBeanDefinitionNames();
     for (String beanName : candidateNames) {
@@ -1202,7 +1242,7 @@ public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
        return;
     }
     // 对所有的配置类依据 @Order 进行排序
-    configCandidates.sort((bd1, bd2) -&gt; {
+    configCandidates.sort((bd1, bd2) -> {
        int i1 = ConfigurationClassUtils.getOrder(bd1.getBeanDefinition());
        int i2 = ConfigurationClassUtils.getOrder(bd2.getBeanDefinition());
        return Integer.compare(i1, i2);
@@ -1212,15 +1252,15 @@ public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
     ConfigurationClassParser parser = new ConfigurationClassParser(
           this.metadataReaderFactory, this.problemReporter, this.environment,
           this.resourceLoader, this.componentScanBeanNameGenerator, registry);
-    Set&lt;BeanDefinitionHolder&gt; candidates = new LinkedHashSet&lt;&gt;(configCandidates);
-    Set&lt;ConfigurationClass&gt; alreadyParsed = new HashSet&lt;&gt;(configCandidates.size());
+    Set<BeanDefinitionHolder> candidates = new LinkedHashSet<>(configCandidates);
+    Set<ConfigurationClass> alreadyParsed = new HashSet<>(configCandidates.size());
     do {
-       StartupStep processConfig = this.applicationStartup.start(&#34;spring.context.config-classes.parse&#34;);
+       StartupStep processConfig = this.applicationStartup.start("spring.context.config-classes.parse");
        //这里就会通过Parser解析配置类中大部分内容，包括我们之前遇到的@Import注解
              parser.parse(candidates);
              parser.validate();
        //解析完成后读取到所有的配置类
-       Set&lt;ConfigurationClass&gt; configClasses = new LinkedHashSet&lt;&gt;(parser.getConfigurationClasses());
+       Set<ConfigurationClass> configClasses = new LinkedHashSet<>(parser.getConfigurationClasses());
              configClasses.removeAll(alreadyParsed);
        ... 
        //将上面读取的配置类加载为Bean
@@ -1235,14 +1275,14 @@ public void processConfigBeanDefinitions(BeanDefinitionRegistry registry) {
 ### `ConfigurationClassParser#parse(candidates)`
 
 ``` java
-public void parse(Set&lt;BeanDefinitionHolder&gt; configCandidates) {
+public void parse(Set<BeanDefinitionHolder> configCandidates) {
     for (BeanDefinitionHolder holder : configCandidates) {
         BeanDefinition bd = holder.getBeanDefinition();
         try {
             if (bd instanceof AnnotatedBeanDefinition annotatedBeanDef) {
                 parse(annotatedBeanDef, holder.getBeanName());
             }
-            else if (bd instanceof AbstractBeanDefinition abstractBeanDef &amp;&amp; abstractBeanDef.hasBeanClass()) {
+            else if (bd instanceof AbstractBeanDefinition abstractBeanDef && abstractBeanDef.hasBeanClass()) {
                 parse(abstractBeanDef.getBeanClass(), holder.getBeanName());
             }
             else {
@@ -1254,7 +1294,7 @@ public void parse(Set&lt;BeanDefinitionHolder&gt; configCandidates) {
         }
         catch (Throwable ex) {
             throw new BeanDefinitionStoreException(
-                    &#34;Failed to parse configuration class [&#34; &#43; bd.getBeanClassName() &#43; &#34;]&#34;, ex);
+                    "Failed to parse configuration class [" + bd.getBeanClassName() + "]", ex);
         }
     }
 
@@ -1262,20 +1302,20 @@ public void parse(Set&lt;BeanDefinitionHolder&gt; configCandidates) {
 }
 ```
 
-内部遍历candidates中的每一个BeanDefinitionHolder，调用parse的多态方法，最终调用`ConfigurationClassParser#processConfigurationClass`，最后调用`deferredImportSelectorHandler.process()`处理[DeferredImportSelector](#针对`DeferredImportSelector` &#34;wikilink&#34;)相关的Bean注册 \^processConfigurationClass
+内部遍历candidates中的每一个BeanDefinitionHolder，调用parse的多态方法，最终调用`ConfigurationClassParser#processConfigurationClass`，最后调用`deferredImportSelectorHandler.process()`处理[DeferredImportSelector](#针对`DeferredImportSelector` "wikilink")相关的Bean注册 \^processConfigurationClass
 
 首先判断条件注释，即处理`@Conditional`相关注解
 
-然后将不同来源的配置类源信息通过`asSourceClass`进行封装，交给最核心的调用[doProcessConfigurationClass](#`ConfigurationClassParser doProcessConfigurationClass` &#34;wikilink&#34;)
+然后将不同来源的配置类源信息通过`asSourceClass`进行封装，交给最核心的调用[doProcessConfigurationClass](#`ConfigurationClassParser doProcessConfigurationClass` "wikilink")
 
-&gt; 将配置类`ConfigurationClass`实例化为`SourceClass`。这样做的目的是为了让后续的处理逻辑能够通过`SourceClass`访问到配置类中定义的所有相关信息（比如注解信息，Meta-info），并进行相应的处理。例如，通过`SourceClass`可以读取配置类上的`@ComponentScan`注解，并执行组件扫描；读取`@Import`注解，并处理导入的配置类或组件；读取`@Bean`方法，并注册对应的Bean定义等。
+> 将配置类`ConfigurationClass`实例化为`SourceClass`。这样做的目的是为了让后续的处理逻辑能够通过`SourceClass`访问到配置类中定义的所有相关信息（比如注解信息，Meta-info），并进行相应的处理。例如，通过`SourceClass`可以读取配置类上的`@ComponentScan`注解，并执行组件扫描；读取`@Import`注解，并处理导入的配置类或组件；读取`@Bean`方法，并注册对应的Bean定义等。
 
 #### `ConfigurationClassParser#doProcessConfigurationClass`
 
 ``` java
 @Nullable
 protected final SourceClass doProcessConfigurationClass(
-        ConfigurationClass configClass, SourceClass sourceClass, Predicate&lt;String&gt; filter)
+        ConfigurationClass configClass, SourceClass sourceClass, Predicate<String> filter)
         throws IOException {
 
     if (configClass.getMetadata().isAnnotated(Component.class.getName())) {
@@ -1291,13 +1331,13 @@ protected final SourceClass doProcessConfigurationClass(
             this.propertySourceRegistry.processPropertySource(propertySource);
         }
         else {
-            logger.info(&#34;Ignoring @PropertySource annotation on [&#34; &#43; sourceClass.getMetadata().getClassName() &#43;
-                    &#34;]. Reason: Environment must implement ConfigurableEnvironment&#34;);
+            logger.info("Ignoring @PropertySource annotation on [" + sourceClass.getMetadata().getClassName() +
+                    "]. Reason: Environment must implement ConfigurableEnvironment");
         }
     }
 
     // Search for locally declared @ComponentScan annotations first.
-    Set&lt;AnnotationAttributes&gt; componentScans = AnnotationConfigUtils.attributesForRepeatable(
+    Set<AnnotationAttributes> componentScans = AnnotationConfigUtils.attributesForRepeatable(
             sourceClass.getMetadata(), ComponentScan.class, ComponentScans.class,
             MergedAnnotation::isDirectlyPresent);
 
@@ -1309,14 +1349,14 @@ protected final SourceClass doProcessConfigurationClass(
     }
 
     if (!componentScans.isEmpty()) {
-        List&lt;Condition&gt; registerBeanConditions = collectRegisterBeanConditions(configClass);
+        List<Condition> registerBeanConditions = collectRegisterBeanConditions(configClass);
         if (!registerBeanConditions.isEmpty()) {
             throw new ApplicationContextException(
-                    &#34;Component scan could not be used with conditions in REGISTER_BEAN phase: &#34; &#43; registerBeanConditions);
+                    "Component scan could not be used with conditions in REGISTER_BEAN phase: " + registerBeanConditions);
         }
         for (AnnotationAttributes componentScan : componentScans) {
-            // The config class is annotated with @ComponentScan -&gt; perform the scan immediately
-            Set&lt;BeanDefinitionHolder&gt; scannedBeanDefinitions =
+            // The config class is annotated with @ComponentScan -> perform the scan immediately
+            Set<BeanDefinitionHolder> scannedBeanDefinitions =
                     this.componentScanParser.parse(componentScan, sourceClass.getMetadata().getClassName());
             // Check the set of scanned definitions for any further config classes and parse recursively if needed
             for (BeanDefinitionHolder holder : scannedBeanDefinitions) {
@@ -1338,8 +1378,8 @@ protected final SourceClass doProcessConfigurationClass(
     AnnotationAttributes importResource =
             AnnotationConfigUtils.attributesFor(sourceClass.getMetadata(), ImportResource.class);
     if (importResource != null) {
-        String[] resources = importResource.getStringArray(&#34;locations&#34;);
-        Class&lt;? extends BeanDefinitionReader&gt; readerClass = importResource.getClass(&#34;reader&#34;);
+        String[] resources = importResource.getStringArray("locations");
+        Class<? extends BeanDefinitionReader> readerClass = importResource.getClass("reader");
         for (String resource : resources) {
             String resolvedResource = this.environment.resolveRequiredPlaceholders(resource);
             configClass.addImportedResource(resolvedResource, readerClass);
@@ -1347,7 +1387,7 @@ protected final SourceClass doProcessConfigurationClass(
     }
 
     // Process individual @Bean methods
-    Set&lt;MethodMetadata&gt; beanMethods = retrieveBeanMethodMetadata(sourceClass);
+    Set<MethodMetadata> beanMethods = retrieveBeanMethodMetadata(sourceClass);
     for (MethodMetadata methodMetadata : beanMethods) {
         configClass.addBeanMethod(new BeanMethod(methodMetadata, configClass));
     }
@@ -1358,7 +1398,7 @@ protected final SourceClass doProcessConfigurationClass(
     // Process superclass, if any
     if (sourceClass.getMetadata().hasSuperClass()) {
         String superclass = sourceClass.getMetadata().getSuperClassName();
-        if (superclass != null &amp;&amp; !superclass.startsWith(&#34;java&#34;)) {
+        if (superclass != null && !superclass.startsWith("java")) {
             boolean superclassKnown = this.knownSuperclasses.containsKey(superclass);
             this.knownSuperclasses.add(superclass, configClass);
             if (!superclassKnown) {
@@ -1368,35 +1408,35 @@ protected final SourceClass doProcessConfigurationClass(
         }
     }
 
-    // No superclass -&gt; processing is complete
+    // No superclass -> processing is complete
     return null;
 }
 ```
 
 该函数依次解决如下问题：
-&#43; **处理@Component注解**
-&#43; **处理@PropertySource和@PropertySources注解**
-&#43; **处理@ComponentScan和@ComponentScans**
-&#43; **处理@Import注解**
-&#43; **处理@ImportResource注解**
-&#43; **处理@Bean注解的方法**
-&#43; **处理接口上的默认方法和超类**
++ **处理@Component注解**
++ **处理@PropertySource和@PropertySources注解**
++ **处理@ComponentScan和@ComponentScans**
++ **处理@Import注解**
++ **处理@ImportResource注解**
++ **处理@Bean注解的方法**
++ **处理接口上的默认方法和超类**
 
-其中的核心是处理`@Import`注解，通过调用 **[ConfigurationClassParser#processImports](#`ConfigurationClassParser processImports` &#34;wikilink&#34;)**
+其中的核心是处理`@Import`注解，通过调用 **[ConfigurationClassParser#processImports](#`ConfigurationClassParser processImports` "wikilink")**
 
 #### `ConfigurationClassParser#processImports`
 
-注意其第三个入参`Collection&lt;SourceClass&gt; importCandidates`，它是通过调用`getImports(sourceClass)`方法，从给定的`sourceClass`中提取所有`@Import`注解指定的类，如果sourceClass是普通的配置类，直接通过`isEmpty()`返回
+注意其第三个入参`Collection<SourceClass> importCandidates`，它是通过调用`getImports(sourceClass)`方法，从给定的`sourceClass`中提取所有`@Import`注解指定的类，如果sourceClass是普通的配置类，直接通过`isEmpty()`返回
 
 ``` java
 private void processImports(ConfigurationClass configClass, SourceClass currentSourceClass,
-        Collection&lt;SourceClass&gt; importCandidates, Predicate&lt;String&gt; filter, boolean checkForCircularImports) {
+        Collection<SourceClass> importCandidates, Predicate<String> filter, boolean checkForCircularImports) {
 
     if (importCandidates.isEmpty()) {
         return;
     }
 
-    if (checkForCircularImports &amp;&amp; isChainedImportOnStack(configClass)) {
+    if (checkForCircularImports && isChainedImportOnStack(configClass)) {
         this.problemReporter.error(new CircularImportProblem(configClass, this.importStack));
     }
     else {
@@ -1404,11 +1444,11 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
         try {
             for (SourceClass candidate : importCandidates) {
                 if (candidate.isAssignable(ImportSelector.class)) {
-                    // Candidate class is an ImportSelector -&gt; delegate to it to determine imports
-                    Class&lt;?&gt; candidateClass = candidate.loadClass();
+                    // Candidate class is an ImportSelector -> delegate to it to determine imports
+                    Class<?> candidateClass = candidate.loadClass();
                     ImportSelector selector = ParserStrategyUtils.instantiateClass(candidateClass, ImportSelector.class,
                             this.environment, this.resourceLoader, this.registry);
-                    Predicate&lt;String&gt; selectorFilter = selector.getExclusionFilter();
+                    Predicate<String> selectorFilter = selector.getExclusionFilter();
                     if (selectorFilter != null) {
                         filter = filter.or(selectorFilter);
                     }
@@ -1417,21 +1457,21 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
                     }
                     else {
                         String[] importClassNames = selector.selectImports(currentSourceClass.getMetadata());
-                        Collection&lt;SourceClass&gt; importSourceClasses = asSourceClasses(importClassNames, filter);
+                        Collection<SourceClass> importSourceClasses = asSourceClasses(importClassNames, filter);
                         processImports(configClass, currentSourceClass, importSourceClasses, filter, false);
                     }
                 }
                 else if (candidate.isAssignable(ImportBeanDefinitionRegistrar.class)) {
-                    // Candidate class is an ImportBeanDefinitionRegistrar -&gt;
+                    // Candidate class is an ImportBeanDefinitionRegistrar ->
                     // delegate to it to register additional bean definitions
-                    Class&lt;?&gt; candidateClass = candidate.loadClass();
+                    Class<?> candidateClass = candidate.loadClass();
                     ImportBeanDefinitionRegistrar registrar =
                             ParserStrategyUtils.instantiateClass(candidateClass, ImportBeanDefinitionRegistrar.class,
                                     this.environment, this.resourceLoader, this.registry);
                     configClass.addImportBeanDefinitionRegistrar(registrar, currentSourceClass.getMetadata());
                 }
                 else {
-                    // Candidate class not an ImportSelector or ImportBeanDefinitionRegistrar -&gt;
+                    // Candidate class not an ImportSelector or ImportBeanDefinitionRegistrar ->
                     // process it as an @Configuration class
                     this.importStack.registerImport(
                             currentSourceClass.getMetadata(), candidate.getMetadata().getClassName());
@@ -1444,8 +1484,8 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
         }
         catch (Throwable ex) {
             throw new BeanDefinitionStoreException(
-                    &#34;Failed to process import candidates for configuration class [&#34; &#43;
-                    configClass.getMetadata().getClassName() &#43; &#34;]: &#34; &#43; ex.getMessage(), ex);
+                    "Failed to process import candidates for configuration class [" +
+                    configClass.getMetadata().getClassName() + "]: " + ex.getMessage(), ex);
         }
         finally {
             this.importStack.pop();
@@ -1455,11 +1495,11 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
 ```
 
 代码遍历每一个`@Import`注解指定的候选类，根据不同类型进行处理
-&#43; `ImportSelector`实现
-&#43; `ImportSelector`
-&#43; `DeferredImportSelector`
-&#43; `ImportBeanDefinitionRegistar`实现
-&#43; 普通的配置类
++ `ImportSelector`实现
++ `ImportSelector`
++ `DeferredImportSelector`
++ `ImportBeanDefinitionRegistar`实现
++ 普通的配置类
 
 ##### 针对`ImportSelector`
 
@@ -1469,16 +1509,16 @@ private void processImports(ConfigurationClass configClass, SourceClass currentS
 
 通过调用`ConfigurationClassParser`的内部类`DeferredImportSelectorHandler#handle()`方法，将其封装为`DeferredImportSelectorHolder` ，加入待处理的List - `deferredImportSelectors`
 
-在`ConfigurationClassParser#parse`[处理完所有候选配置类后](#`ConfigurationClassParser parse(candidates)` &#34;wikilink&#34;)，调用`DeferredImportSelectorHandler#process()`方法，该方法将加入`deferredImportSelectors`中的所有`DeferredImportSelectorHolder`执行内部类的`DeferredImportSelectorGroupingHandler#register`方法，得到包装好的、已经分组完毕的`DeferredImportSelectorGrouping`，然后调用`DeferredImportSelectorGroupingHandler#processGroupImports()`，处理组内所有的延迟导入 (`DeferredImportSelector`)
+在`ConfigurationClassParser#parse`[处理完所有候选配置类后](#`ConfigurationClassParser parse(candidates)` "wikilink")，调用`DeferredImportSelectorHandler#process()`方法，该方法将加入`deferredImportSelectors`中的所有`DeferredImportSelectorHolder`执行内部类的`DeferredImportSelectorGroupingHandler#register`方法，得到包装好的、已经分组完毕的`DeferredImportSelectorGrouping`，然后调用`DeferredImportSelectorGroupingHandler#processGroupImports()`，处理组内所有的延迟导入 (`DeferredImportSelector`)
 
 ###### `DeferredImportSelectorGroupingHandler#register`
 
 ``` java
 void register(DeferredImportSelectorHolder deferredImport) {
-            Class&lt;? extends Group&gt; group = deferredImport.getImportSelector().getImportGroup();
+            Class<? extends Group> group = deferredImport.getImportSelector().getImportGroup();
             DeferredImportSelectorGrouping grouping = this.groupings.computeIfAbsent(
                     (group != null ? group : deferredImport),
-                    key -&gt; new DeferredImportSelectorGrouping(createGroup(group)));
+                    key -> new DeferredImportSelectorGrouping(createGroup(group)));
             grouping.add(deferredImport);
             this.configurationClasses.put(deferredImport.getConfigurationClass().getMetadata(),
                     deferredImport.getConfigurationClass());
@@ -1487,7 +1527,7 @@ void register(DeferredImportSelectorHolder deferredImport) {
 
 - 首先尝试获取`DeferredImportSelector`指定的导入组 (`ImportGroup`)，如果没有指定特定的导入组，则使用`DeferredImportSelector`本身作为组的Key
 - 尝试从一个名为`groupings`的映射中获取或创建一个与导入组对应的`DeferredImportSelectorGrouping`对象。如果映射中尚未存在与当前组对应的分组，那么将创建一个新的分组，并将其加入到映射中
-  - 注意，此处的Group逻辑是将`DeferredImportSelector.Group`这个内部接口包装到`ConfigurationClassParser.DeferredImportSelectorGourping`这个内部类中，其内部维护了一个`DeferredImportSelector.Group`对象和`List&lt;DeferredImportSelectorHolder&gt;`对象
+  - 注意，此处的Group逻辑是将`DeferredImportSelector.Group`这个内部接口包装到`ConfigurationClassParser.DeferredImportSelectorGourping`这个内部类中，其内部维护了一个`DeferredImportSelector.Group`对象和`List<DeferredImportSelectorHolder>`对象
 - 调用`DeferredImportSelectGrouping#add(DeferredImportSelectorHolder)`，将`DeferredImportSelectorHolder`加入内部类维护的`Grouping`中 (静态类)
 - 最后，代码将当前`DeferredImportSelectorHolder`对应的配置类(`ConfigurationClass`)及其元数据添加到一个名为`configurationClasses`的映射中。这确保了后续能够快速访问到与特定`DeferredImportSelector`相关联的配置类
 
@@ -1496,8 +1536,8 @@ void register(DeferredImportSelectorHolder deferredImport) {
 ``` java
 void processGroupImports() {
     for (DeferredImportSelectorGrouping grouping : this.groupings.values()) {
-        Predicate&lt;String&gt; filter = grouping.getCandidateFilter();
-        grouping.getImports().forEach(entry -&gt; {
+        Predicate<String> filter = grouping.getCandidateFilter();
+        grouping.getImports().forEach(entry -> {
             ConfigurationClass configurationClass = this.configurationClasses.get(entry.getMetadata());
             try {
                 processImports(configurationClass, asSourceClass(configurationClass, filter),
@@ -1509,8 +1549,8 @@ void processGroupImports() {
             }
             catch (Throwable ex) {
                 throw new BeanDefinitionStoreException(
-                        &#34;Failed to process import candidates for configuration class [&#34; &#43;
-                                configurationClass.getMetadata().getClassName() &#43; &#34;]&#34;, ex);
+                        "Failed to process import candidates for configuration class [" +
+                                configurationClass.getMetadata().getClassName() + "]", ex);
             }
         });
     }
@@ -1519,7 +1559,7 @@ void processGroupImports() {
 
 - 遍历保存在`Groups - DeferredImportSelectorGroupingHandler`中的 `DeferredImportSelectorGroup`对象，调用 `DeferredImportSelectorGroup#getImports()`方法
 - `DeferredImportSelectorGroup#getImports()`方法调用`DeferredImportSelectorGroup`中维护的真实的Group - `DeferredImportSelector.Group#process`方法，然后返回含有`meta-info`的`Entry`
-- 使用内部维护的`Map`(在`register`中put)，根据`Entry.meta-info`得到对应的`ConfigurationClass` ，调用`ConfigurationClassParser#processImports`，和[前面](#`ConfigurationClassParser processImports` &#34;wikilink&#34;)一样递归调用进行处理
+- 使用内部维护的`Map`(在`register`中put)，根据`Entry.meta-info`得到对应的`ConfigurationClass` ，调用`ConfigurationClassParser#processImports`，和[前面](#`ConfigurationClassParser processImports` "wikilink")一样递归调用进行处理
 
 所以根据以上分析，`DeferredImportSelector`最终的处理逻辑在于`DeferredImportSelector.Group#process()` \^db8805
 
@@ -1536,11 +1576,11 @@ public interface ImportBeanDefinitionRegistrar {
 }
 ```
 
-调用`ConfigurationClass#addImportBeanDefinitionRegistrar`方法，将对应的实例加入configClass对应的Collection类中，后续在[loadBeanDefinitions](#`ConfigurationClassBeanDefinitionReader loadBeanDefinitions` &#34;wikilink&#34;)中调用其`registerBeanDefinitions`，注册相应的BeanDefinition
+调用`ConfigurationClass#addImportBeanDefinitionRegistrar`方法，将对应的实例加入configClass对应的Collection类中，后续在[loadBeanDefinitions](#`ConfigurationClassBeanDefinitionReader loadBeanDefinitions` "wikilink")中调用其`registerBeanDefinitions`，注册相应的BeanDefinition
 
 ##### 针对普通配置类
 
-不使用特殊机制，直接递归调用[processConfigurationClass](#^processConfigurationClass &#34;wikilink&#34;)
+不使用特殊机制，直接递归调用[processConfigurationClass](#^processConfigurationClass "wikilink")
 
 ### `ConfigurationClassParser#getConfigurationClasses`
 
@@ -1550,7 +1590,7 @@ public interface ImportBeanDefinitionRegistrar {
 \^98f726
 
 ``` java
-public void loadBeanDefinitions(Set&lt;ConfigurationClass&gt; configurationModel) {
+public void loadBeanDefinitions(Set<ConfigurationClass> configurationModel) {
         TrackedConditionEvaluator trackedConditionEvaluator = new TrackedConditionEvaluator();
         for (ConfigurationClass configClass : configurationModel) {
             loadBeanDefinitionsForConfigurationClass(configClass, trackedConditionEvaluator);
@@ -1566,7 +1606,7 @@ private void loadBeanDefinitionsForConfigurationClass(
 
     if (trackedConditionEvaluator.shouldSkip(configClass)) {
         String beanName = configClass.getBeanName();
-        if (StringUtils.hasLength(beanName) &amp;&amp; this.registry.containsBeanDefinition(beanName)) {
+        if (StringUtils.hasLength(beanName) && this.registry.containsBeanDefinition(beanName)) {
             this.registry.removeBeanDefinition(beanName);
         }
         this.importRegistry.removeImportingClass(configClass.getMetadata().getClassName());
@@ -1598,7 +1638,7 @@ private void loadBeanDefinitionsForConfigurationClass(
 
 # AOP
 
-AOP的实现类是`AnnotationAwareAspectJAutoProxyCreator`，其是`BeanPostProcessor`的实现类，具体来说，是`InstantiationAwareBeanPostProcessor`的实现类，在实例化Bean过程中，通过调用[BeanPostProcessor中的实例化前处理器](#^fcb215 &#34;wikilink&#34;)进行短路，得到相应的代理Bean
+AOP的实现类是`AnnotationAwareAspectJAutoProxyCreator`，其是`BeanPostProcessor`的实现类，具体来说，是`InstantiationAwareBeanPostProcessor`的实现类，在实例化Bean过程中，通过调用[BeanPostProcessor中的实例化前处理器](#^fcb215 "wikilink")进行短路，得到相应的代理Bean
 
 ## `@EnableAspectJAutoProxy`
 
@@ -1613,14 +1653,7 @@ public @interface EnableAspectJAutoProxy {
 }
 ```
 
-这个注解使用`@Import`导入了`AspectJAutoProxyRegistrar`，其是`ImportBeanDefinitionRegistrar`的实现类，会在[处理配置类](#^f6a27a &#34;wikilink&#34;)相应`@Import`机制的时候将`AnnotationAwareAspectJAutoProxyCreator`实现类注册到容器中，即注册到BeanDefinition中，实现相应的实例化前处理器功能 (`InstantiationAwareBeanPostProcessor`)
+这个注解使用`@Import`导入了`AspectJAutoProxyRegistrar`，其是`ImportBeanDefinitionRegistrar`的实现类，会在[处理配置类](#^f6a27a "wikilink")相应`@Import`机制的时候将`AnnotationAwareAspectJAutoProxyCreator`实现类注册到容器中，即注册到BeanDefinition中，实现相应的实例化前处理器功能 (`InstantiationAwareBeanPostProcessor`)
 
 
-&lt;!--more--&gt;
-
-
----
-
-> Author: Shiping Guo  
-> URL: http://localhost:1313/posts/6e2a775/  
-
+<!--more-->
